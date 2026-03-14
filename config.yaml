@@ -1,0 +1,75 @@
+# EventPredictor 配置文件
+
+# LLM配置
+llm:
+  provider: minimax  # anthropic | openai | minimax | mock
+  model: MiniMax-M2.1
+  temperature: 0.7
+  max_tokens: 2000
+  # API密钥从环境变量读取: ANTHROPIC_API_KEY / OPENAI_API_KEY / MINIMAX_API_KEY
+
+# 数据源配置 - 优先级: RSS > Polymarket > WorldMonitor > 内置数据
+datasources:
+  # RSS 实时新闻源 (最高优先级)
+  rss:
+    enabled: true
+    cache_ttl: 300  # 5分钟缓存
+    feeds:
+      - name: "bbc_world"
+        url: "https://feeds.bbci.co.uk/news/world/rss.xml"
+        category: "politics"
+      - name: "reuters"
+        url: "https://www.reutersagency.com/feed/?taxonomy=best-topics&post_type=best"
+        category: "politics"
+      - name: "techcrunch"
+        url: "https://techcrunch.com/feed/"
+        category: "technology"
+      - name: "bbc_chinese"
+        url: "https://feeds.bbci.co.uk/zhongwen/simp/rss.xml"
+        category: "politics"
+
+  # Polymarket 预测市场 (次高优先级)
+  polymarket:
+    enabled: true
+    gamma_api: "https://gamma-api.polymarket.com"
+    cache_ttl: 180
+
+  # WorldMonitor 集成 (第三优先级)
+  worldmonitor:
+    enabled: true
+    local_api_url: "http://localhost:46123"
+    api_token: null
+    timeout: 30
+
+# 旧WorldMonitor配置（保留兼容）
+worldmonitor:
+  rss_endpoint: "https://worldmonitor/api/rss-proxy"
+  polymarket_endpoint: "https://worldmonitor/api/polymarket"
+  telegram_endpoint: "https://worldmonitor/api/telegram-feed"
+  local_api_url: "http://localhost:46123"
+  api_token: null
+  timeout: 30
+
+# API服务配置
+api:
+  host: "0.0.0.0"
+  port: 8005
+  debug: false
+  title: "EventPredictor API"
+  version: "1.0.0"
+  description: "全球局势推演决策系统"
+
+# Agent配置
+agents:
+  info_collector:
+    prompt_template: "你是一个信息收集专家..."
+  analyzer:
+    prompt_template: "你是一个深度分析专家..."
+  predictor:
+    prompt_template: "你是一个趋势预测专家..."
+
+# 预测配置
+prediction:
+  default_time_horizon: "Short-term (1-7 days)"
+  min_confidence: 0.5
+  cache_ttl: 3600  # 秒

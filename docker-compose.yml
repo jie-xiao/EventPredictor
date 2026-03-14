@@ -1,0 +1,29 @@
+# docker-compose.yml
+version: '3.8'
+
+services:
+  eventpredictor:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - WM_RSS_ENDPOINT=${WM_RSS_ENDPOINT:-http://worldmonitor:3000/api/rss-proxy}
+      - WM_POLYMARKET_ENDPOINT=${WM_POLYMARKET_ENDPOINT:-http://worldmonitor:3000/api/polymarket}
+    volumes:
+      - ./config.yaml:/app/config.yaml:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # WorldMonitor依赖（可选）
+  # worldmonitor:
+  #   image: worldmonitor/worldmonitor:latest
+  #   ports:
+  #     - "3000:3000"

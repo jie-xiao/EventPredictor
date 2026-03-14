@@ -1,0 +1,18 @@
+fastapi>=0.104.0
+uvicorn>=0.24.0
+langchain>=0.1.0
+langchain-openai>=0.0.5
+pydantic>=2.5.0
+python-dotenv>=1.0.0
+
+# Real-time data sources
+feedparser>=6.0.0
+httpx>=0.25.0
+pyyaml>=6.0
+deep-translator>=1.11.0  # 翻译服务
+
+# Testing dependencies
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+httpx>=0.25.0
+pytest-cov>=4.1.0
