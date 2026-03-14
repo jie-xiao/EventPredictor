@@ -52,6 +52,35 @@ class CrossAnalysisResponse(BaseModel):
     trend_confidence: float
 
 
+class ScenarioStep(BaseModel):
+    """情景推演步骤"""
+    time: str
+    description: str
+    probability: float
+    key_events: List[str]
+
+
+class Scenario(BaseModel):
+    """单个情景"""
+    id: str
+    name: str
+    description: str
+    probability: float
+    steps: List[ScenarioStep]
+    key_factors: List[str]
+    potential_outcomes: List[str]
+
+
+class ScenarioResponse(BaseModel):
+    """情景推演响应结构"""
+    event_id: str
+    scenarios: List[Scenario]
+    most_likely_scenario: str
+    overall_assessment: str
+    key_uncertainties: List[str]
+    recommendation: str
+
+
 class LLMService:
     """LLM服务 - 封装LLM调用"""
 
@@ -221,6 +250,27 @@ class LLMService:
                 consensus=["各方都在关注事件发展"],
                 overall_trend="平稳",
                 trend_confidence=0.5
+            )
+        elif model == ScenarioResponse:
+            return model(
+                event_id="unknown",
+                scenarios=[
+                    Scenario(
+                        id="scenario_1",
+                        name="基准情景",
+                        description="事态保持平稳发展",
+                        probability=0.5,
+                        steps=[
+                            ScenarioStep(time="短期", description="观察评估", probability=0.7, key_events=["持续关注"])
+                        ],
+                        key_factors=["政策动向"],
+                        potential_outcomes=["局势稳定"]
+                    )
+                ],
+                most_likely_scenario="基准情景",
+                overall_assessment="需要更多信息进行准确预测",
+                key_uncertainties=["政策变化", "外部因素"],
+                recommendation="持续关注事态发展"
             )
 
         # 通用默认值

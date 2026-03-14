@@ -1,9 +1,9 @@
+/* 导入抽屉和工具栏样式 - @import 必须在最前面 */
+@import './styles/drawer-toolbar.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-/* 导入抽屉和工具栏样式 */
-@import './styles/drawer-toolbar.css';
 
 :root {
   /* ===== 背景色 ===== */

@@ -4,7 +4,19 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>事件预测器</title>
+    <meta name="description" content="EventPredictor - 全球事件预测与分析平台" />
+    <meta name="keywords" content="事件预测, AI分析, 情景推演, 全球新闻, 时事分析" />
+    <title>EventPredictor - 全球事件预测分析</title>
+    <!-- SPA redirect script for GitHub Pages -->
+    <script>
+      (function() {
+        var redirect = sessionStorage.redirect;
+        delete sessionStorage.redirect;
+        if (redirect && redirect != location.href) {
+          history.replaceState(null, null, redirect);
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

@@ -54,6 +54,13 @@ yarn-error.log*
 # Frontend build
 frontend/dist/
 
+# Prediction history data
+data/prediction_history/
+
+# Screenshots and images (optional)
+*.png
+!docs/images/*.png
+
 # OS files
 .DS_Store
 Thumbs.db

@@ -320,5 +320,91 @@ export const api = {
     const response = await fetch(`${API_BASE_URL}/api/v1/worldmonitor/summary`);
     if (!response.ok) throw new Error('Failed to fetch summary');
     return response.json();
+  },
+
+  // 情景推演
+  async generateScenarios(request: {
+    event_id: string;
+    title: string;
+    description: string;
+    category?: string;
+    importance?: number;
+    timestamp?: string;
+    num_scenarios?: number;
+    analysis_result?: AnalysisResult;
+  }): Promise<ScenarioResult> {
+    const response = await fetch(`${API_BASE_URL}/api/v1/analysis/scenarios`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(request)
+    });
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ detail: 'Scenario generation failed' }));
+      throw new Error(error.detail || 'Scenario generation failed');
+    }
+    return response.json();
+  },
+
+  // 优化情景
+  async refineScenario(request: {
+    event_id: string;
+    title: string;
+    description: string;
+    scenario_id: string;
+    new_information: string;
+  }): Promise<any> {
+    const response = await fetch(`${API_BASE_URL}/api/v1/analysis/scenarios/refine`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(request)
+    });
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ detail: 'Scenario refinement failed' }));
+      throw new Error(error.detail || 'Scenario refinement failed');
+    }
+    return response.json();
+  },
+
+  // 获取情景模板
+  async getScenarioTemplates(): Promise<{ templates: ScenarioTemplate[] }> {
+    const response = await fetch(`${API_BASE_URL}/api/v1/analysis/scenarios/templates`);
+    if (!response.ok) throw new Error('Failed to fetch scenario templates');
+    return response.json();
   }
 };
+
+// 情景推演类型定义
+export interface ScenarioStep {
+  time: string;
+  description: string;
+  probability: number;
+  key_events: string[];
+}
+
+export interface Scenario {
+  id: string;
+  name: string;
+  description: string;
+  probability: number;
+  steps: ScenarioStep[];
+  key_factors: string[];
+  potential_outcomes: string[];
+}
+
+export interface ScenarioResult {
+  event_id: string;
+  scenarios: Scenario[];
+  most_likely_scenario: string;
+  overall_assessment: string;
+  key_uncertainties: string[];
+  recommendation: string;
+  generated_at: string;
+}
+
+export interface ScenarioTemplate {
+  id: string;
+  name: string;
+  description: string;
+  scenarios: string[];
+  timeframes: string[];
+}

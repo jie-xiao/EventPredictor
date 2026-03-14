@@ -106,12 +106,17 @@ _no_proxy_hosts = [
     # 国际源
     "feeds.bbci.co.uk", "rss.cnn.com", "news.google.com",
     "www.reuters.com", "rss.nytimes.com", "feeds.washingtonpost.com",
-    # 中文源
+    # 中文源 - 原有
     "news.sina.com.cn", "mil.news.sina.com.cn", "finance.sina.com.cn", "tech.sina.com.cn",
     "news.qq.com", "www.sohu.com", "www.people.com.cn",
     "world.huanqiu.com", "mil.huanqiu.com", "news.cctv.com",
     "www.cankaoxiaoxi.com", "www.guancha.cn", "news.ifeng.com",
-    "news.163.com", "36kr.com", "www.huxiu.com"
+    "news.163.com", "36kr.com", "www.huxiu.com",
+    # 中文源 - 新增
+    "rsshub.app", "www.caixin.com", "www.thepaper.cn", "www.yicai.com",
+    "www.chinanews.com", "www.news.cn", "www.ithome.com", "www.tmtpost.com",
+    "xueqiu.com", "www.eastmoney.com", "www.jiemian.com", "www.zhihu.com",
+    "weibo.com", "www.douyin.com", "www.cnr.cn", "www.gmw.cn", "www.81.cn"
 ]
 _no_proxy_value = ",".join(_no_proxy_hosts)
 os.environ["NO_PROXY"] = _no_proxy_value
@@ -298,6 +303,143 @@ RSS_FEEDS = {
         "category": "technology",
         "language": "zh",
         "priority": 2
+    },
+    # ============ 新增中文新闻源 ============
+    # 财新网
+    "caixin_finance": {
+        "url": "https://rsshub.app/caixin/finance",
+        "category": "economy",
+        "language": "zh",
+        "priority": 1
+    },
+    "caixin_politics": {
+        "url": "https://rsshub.app/caixin/politics",
+        "category": "politics",
+        "language": "zh",
+        "priority": 1
+    },
+    # 澎湃新闻
+    "thepaper_china": {
+        "url": "https://rsshub.app/thepaper/featured",
+        "category": "politics",
+        "language": "zh",
+        "priority": 1
+    },
+    "thepaper_world": {
+        "url": "https://rsshub.app/thepaper/world",
+        "category": "politics",
+        "language": "zh",
+        "priority": 1
+    },
+    # 第一财经
+    "yicai": {
+        "url": "https://rsshub.app/yicai/brief",
+        "category": "economy",
+        "language": "zh",
+        "priority": 1
+    },
+    # 中国新闻网
+    "chinanews_china": {
+        "url": "https://rsshub.app/chinanews/china",
+        "category": "politics",
+        "language": "zh",
+        "priority": 1
+    },
+    "chinanews_world": {
+        "url": "https://rsshub.app/chinanews/world",
+        "category": "politics",
+        "language": "zh",
+        "priority": 1
+    },
+    # 新华网
+    "xinhua_world": {
+        "url": "http://www.news.cn/world/news_world.xml",
+        "category": "politics",
+        "language": "zh",
+        "priority": 1
+    },
+    "xinhua_finance": {
+        "url": "http://www.news.cn/fortune/news_fortune.xml",
+        "category": "economy",
+        "language": "zh",
+        "priority": 1
+    },
+    # IT之家
+    "ithome": {
+        "url": "https://rsshub.app/ithome/ranking/7days",
+        "category": "technology",
+        "language": "zh",
+        "priority": 2
+    },
+    # 钛媒体
+    "tmtpost": {
+        "url": "https://rsshub.app/tmtpost",
+        "category": "technology",
+        "language": "zh",
+        "priority": 2
+    },
+    # 雪球热榜
+    "xueqiu_hot": {
+        "url": "https://rsshub.app/xueqiu/hotstock",
+        "category": "economy",
+        "language": "zh",
+        "priority": 2
+    },
+    # 东方财富
+    "eastmoney": {
+        "url": "https://rsshub.app/eastmoney/important",
+        "category": "economy",
+        "language": "zh",
+        "priority": 2
+    },
+    # 界面新闻
+    "jiemian": {
+        "url": "https://rsshub.app/jiemian",
+        "category": "politics",
+        "language": "zh",
+        "priority": 1
+    },
+    # 知乎热榜
+    "zhihu_hot": {
+        "url": "https://rsshub.app/zhihu/hotlist",
+        "category": "other",
+        "language": "zh",
+        "priority": 3
+    },
+    # 微博热搜
+    "weibo_hot": {
+        "url": "https://rsshub.app/weibo/search/hot",
+        "category": "other",
+        "language": "zh",
+        "priority": 3
+    },
+    # 抖音热点
+    "douyin_hot": {
+        "url": "https://rsshub.app/douyin/trending",
+        "category": "other",
+        "language": "zh",
+        "priority": 3
+    },
+    # 央广网
+    "cnr_news": {
+        "url": "https://rsshub.app/cnr/index",
+        "category": "politics",
+        "language": "zh",
+        "priority": 1
+    },
+    # 光明网
+    "gmw_news": {
+        "url": "https://rsshub.app/gmw/news",
+        "category": "politics",
+        "language": "zh",
+        "priority": 1
+    },
+    # 中国军网
+    "81_cn": {
+        "url": "https://rsshub.app/81/jqkx",
+        "category": "military",
+        "language": "zh",
+        "priority": 1
     },
     # ============ 国际新闻源（作为补充）============
     "bbc_world": {
@@ -528,7 +670,7 @@ class RSSService:
     def _get_source_label(self, source_url: str) -> str:
         """获取新闻来源的中文名称"""
         source_mapping = {
-            # 中文源
+            # 中文源 - 原有
             "news.sina.com.cn": "新浪新闻",
             "mil.news.sina.com.cn": "新浪军事",
             "finance.sina.com.cn": "新浪财经",
@@ -545,6 +687,24 @@ class RSSService:
             "news.163.com": "网易新闻",
             "36kr.com": "36氪",
             "www.huxiu.com": "虎嗅",
+            # 中文源 - 新增
+            "caixin": "财新网",
+            "thepaper": "澎湃新闻",
+            "yicai": "第一财经",
+            "chinanews": "中国新闻网",
+            "news.cn": "新华网",
+            "ithome": "IT之家",
+            "tmtpost": "钛媒体",
+            "xueqiu": "雪球",
+            "eastmoney": "东方财富",
+            "jiemian": "界面新闻",
+            "zhihu": "知乎",
+            "weibo": "微博",
+            "douyin": "抖音",
+            "cnr": "央广网",
+            "gmw": "光明网",
+            "81.cn": "中国军网",
+            "rsshub.app": "RSSHub聚合",
             # 国际源
             "feeds.bbci.co.uk": "BBC",
             "rss.cnn.com": "CNN",

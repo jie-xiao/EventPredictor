@@ -1,21 +1,26 @@
 # EventPredictor - 全球局势推演决策系统
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Version-1.0.0-blue.svg" alt="Version">
+  <img src="https://img.shields.io/badge/Version-1.1.0-blue.svg" alt="Version">
   <img src="https://img.shields.io/badge/Python-3.11+-green.svg" alt="Python">
   <img src="https://img.shields.io/badge/FastAPI-0.109+-orange.svg" alt="FastAPI">
+  <img src="https://img.shields.io/badge/React-19+-cyan.svg" alt="React">
   <img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License">
 </p>
 
 ## 项目简介
 
-EventPredictor 是一个基于多智能体协作的全球局势推演决策系统。它能够接收全球事件信息，通过信息收集、深度分析和趋势预测三个阶段，输出未来走势预测和置信度。
+EventPredictor 是一个基于多智能体协作的全球局势推演决策系统。它能够接收全球事件信息，通过信息收集、深度分析和趋势预测三个阶段，输出未来走势预测和置信度。系统配备了交互式的3D地球可视化界面，支持情景推演、历史记录追踪等功能。
 
 ## 核心功能
 
-- 🔍 **事件输入** - 支持从WorldMonitor获取事件，或手动提交事件
+- 🌐 **3D地球可视化** - 交互式3D地球展示全球事件分布
+- 🔍 **多源数据采集** - 集成20+中文RSS源和多个国际新闻源
 - 🧠 **多Agent分析** - 信息收集 → 深度分析 → 趋势预测
-- 📊 **预测输出** - 趋势方向 + 置信度 + 时间范围 + 影响因素
+- 📊 **情景推演** - 生成乐观/基准/悲观三种发展情景
+- 🔎 **搜索与筛选** - 按类别、严重程度、关键词筛选事件
+- 📜 **历史记录** - 保存和查看预测历史
+- 📈 **可视化图表** - 情感雷达图、冲突热力图、趋势仪表盘
 - 🌐 **API服务** - RESTful API，易于集成
 
 ## 技术架构

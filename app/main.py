@@ -17,6 +17,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from app.api.routes import predict, events, health
 from app.api.routes.multi_agent import router as multi_agent_router
 from app.api.routes.debate import router as debate_router
+from app.api.routes.history import router as history_router
 from app.core.config import config
 
 
@@ -98,6 +99,7 @@ app.include_router(predict.router)
 app.include_router(events.router)
 app.include_router(multi_agent_router)
 app.include_router(debate_router)
+app.include_router(history_router)
 
 
 @app.on_event("startup")

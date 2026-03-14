@@ -3,6 +3,7 @@ from fastapi import APIRouter, HTTPException, status, Query
 from typing import List, Optional
 from pydantic import BaseModel, Field
 from app.services.multi_agent_service import multi_agent_service
+from app.services.scenario_service import scenario_service
 from app.agents.roles import get_all_role_ids, get_role, ROLES
 
 
@@ -270,6 +271,128 @@ async def get_analysis_depths():
                 "id": "detailed",
                 "name": "详细分析",
                 "description": "深入分析，包括详细推理和时间线"
+            }
+        ]
+    }
+
+
+# ============ 情景推演 API ============
+
+class ScenarioRequest(BaseModel):
+    """情景推演请求"""
+    event_id: str = Field(..., description="事件ID")
+    title: str = Field(..., description="事件标题")
+    description: str = Field(..., description="事件描述")
+    category: str = Field(default="Other", description="事件类别")
+    importance: int = Field(default=3, ge=1, le=5, description="重要性 1-5")
+    timestamp: Optional[str] = Field(default=None, description="时间戳")
+    num_scenarios: int = Field(default=3, ge=2, le=5, description="生成的情景数量")
+    analysis_result: Optional[dict] = Field(default=None, description="已有的分析结果")
+
+
+class ScenarioRefineRequest(BaseModel):
+    """情景优化请求"""
+    event_id: str = Field(..., description="事件ID")
+    title: str = Field(..., description="事件标题")
+    description: str = Field(..., description="事件描述")
+    scenario_id: str = Field(..., description="要优化的情景ID")
+    new_information: str = Field(..., description="新获得的信息")
+
+
+@router.post(
+    "/scenarios",
+    summary="生成情景推演",
+    description="为事件生成多个可能的未来发展情景"
+)
+async def generate_scenarios(request: ScenarioRequest):
+    """生成情景推演"""
+    try:
+        event = {
+            "id": request.event_id,
+            "title": request.title,
+            "description": request.description,
+            "category": request.category,
+            "importance": request.importance,
+            "timestamp": request.timestamp or ""
+        }
+
+        result = await scenario_service.generate_scenarios(
+            event=event,
+            analysis_result=request.analysis_result,
+            num_scenarios=request.num_scenarios
+        )
+
+        return result
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Scenario generation failed: {str(e)}"
+        )
+
+
+@router.post(
+    "/scenarios/refine",
+    summary="优化情景推演",
+    description="根据新信息优化特定情景的预测"
+)
+async def refine_scenario(request: ScenarioRefineRequest):
+    """优化情景推演"""
+    try:
+        event = {
+            "id": request.event_id,
+            "title": request.title,
+            "description": request.description
+        }
+
+        result = await scenario_service.refine_scenario(
+            event=event,
+            scenario_id=request.scenario_id,
+            new_information=request.new_information
+        )
+
+        return result
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Scenario refinement failed: {str(e)}"
+        )
+
+
+@router.get(
+    "/scenarios/templates",
+    summary="获取情景模板",
+    description="获取预设的情景推演模板"
+)
+async def get_scenario_templates():
+    """获取情景推演模板"""
+    return {
+        "templates": [
+            {
+                "id": "geopolitical",
+                "name": "地缘政治情景",
+                "description": "适用于地缘政治事件",
+                "scenarios": ["乐观情景", "基准情景", "悲观情景"],
+                "timeframes": ["短期(1-7天)", "中期(1-3月)", "长期(3-12月)"]
+            },
+            {
+                "id": "economic",
+                "name": "经济事件情景",
+                "description": "适用于经济政策或市场事件",
+                "scenarios": ["快速恢复", "缓慢复苏", "持续低迷"],
+                "timeframes": ["即时反应", "1个月内", "季度影响"]
+            },
+            {
+                "id": "technology",
+                "name": "科技事件情景",
+                "description": "适用于科技政策或行业变化",
+                "scenarios": ["加速发展", "平稳推进", "遭遇阻力"],
+                "timeframes": ["技术周期", "市场周期", "监管周期"]
             }
         ]
     }

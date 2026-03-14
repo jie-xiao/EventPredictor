@@ -8,6 +8,8 @@ import PredictionPanel from '../components/analysis/PredictionPanel';
 import RoleMatrix from '../components/analysis/RoleMatrix';
 import CrossAnalysis from '../components/analysis/CrossAnalysis';
 import TimelineView from '../components/analysis/TimelineView';
+import SentimentRadar from '../components/analysis/SentimentRadar';
+import ConflictHeatmap from '../components/analysis/ConflictHeatmap';
 
 // Avoid unused variable warnings
 void Share2;
@@ -203,6 +205,37 @@ export default function AnalysisResultPage() {
               />
             </div>
           </div>
+
+          {/* Sentiment & Conflict Analysis Section - NEW */}
+          <section>
+            <div className="flex items-center gap-3 mb-4">
+              <h2 className="text-lg font-semibold" style={{ color: COLORS.text.primary }}>
+                深度分析
+              </h2>
+              <span
+                className="px-2 py-0.5 rounded text-xs"
+                style={{ backgroundColor: `${COLORS.primary.cyan}15`, color: COLORS.primary.cyan }}
+              >
+                Enhanced
+              </span>
+            </div>
+            <div className="grid gap-6 lg:grid-cols-2">
+              {/* Sentiment Radar */}
+              <div>
+                <SentimentRadar result={result} maxRoles={5} />
+              </div>
+
+              {/* Conflict Heatmap */}
+              <div>
+                <ConflictHeatmap
+                  result={result}
+                  onCellClick={(r1, r2, intensity) =>
+                    console.log(`Conflict: ${r1} vs ${r2} = ${intensity}`)
+                  }
+                />
+              </div>
+            </div>
+          </section>
         </div>
       </main>
 
