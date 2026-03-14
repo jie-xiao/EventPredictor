@@ -84,10 +84,11 @@ app = FastAPI(
 # 添加限流中间件 - Section 16.3
 app.add_middleware(RateLimitMiddleware, requests_per_minute=100)
 
-# 配置CORS
+# 配置CORS - 从环境变量读取允许的源
+_cors_origins = os.getenv("CORS_ORIGINS", "http://localhost:5173,http://localhost:3000").split(",")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=_cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

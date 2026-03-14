@@ -4,7 +4,11 @@ from pydantic import BaseModel
 import json
 import asyncio
 import os
+import logging
 from app.core.config import config
+
+# 配置日志
+logger = logging.getLogger(__name__)
 
 # 解决HTTP代理导致的LLM API请求503问题
 # 设置NO_PROXY确保LLM API请求不走代理
@@ -162,10 +166,10 @@ class LLMService:
 
             except json.JSONDecodeError as e:
                 last_error = e
-                print(f"JSON解析失败 (尝试 {attempt + 1}/{self.max_retries}): {e}")
+                logger.warning(f"JSON解析失败 (尝试 {attempt + 1}/{self.max_retries})")
             except Exception as e:
                 last_error = e
-                print(f"结构化输出失败 (尝试 {attempt + 1}/{self.max_retries}): {e}")
+                logger.warning(f"结构化输出失败 (尝试 {attempt + 1}/{self.max_retries})")
 
             # 指数退避重试
             if attempt < self.max_retries - 1:
@@ -173,7 +177,7 @@ class LLMService:
                 await asyncio.sleep(delay)
 
         # 所有重试失败，返回基于模型的默认值
-        print(f"所有重试失败，返回默认结构化响应: {last_error}")
+        logger.warning(f"所有重试失败，返回默认结构化响应")
         return self._create_fallback_response(response_model)
 
     def _parse_json_response(self, response: str) -> Dict[str, Any]:
@@ -286,7 +290,7 @@ class LLMService:
             api_key = self._get_api_key()
 
             if not api_key:
-                print("警告: MINIMAX_API_KEY 环境变量未设置，使用mock响应")
+                logger.warning("MINIMAX_API_KEY 环境变量未设置，使用mock响应")
                 return self._mock_response(prompt)
 
             # 创建不使用代理的HTTP客户端
@@ -316,7 +320,7 @@ class LLMService:
             return response.choices[0].message.content
 
         except Exception as e:
-            print(f"LLM调用失败: {e}")
+            logger.error(f"LLM调用失败")
             # 调用失败时返回mock响应
             return self._mock_response(prompt)
 
@@ -341,7 +345,7 @@ class LLMService:
             return response.content[0].text
 
         except Exception as e:
-            print(f"Anthropic调用失败: {e}")
+            logger.error(f"Anthropic调用失败")
             return self._mock_response(prompt)
 
     async def _openai_call(self, prompt: str, system_prompt: Optional[str] = None) -> str:
@@ -370,7 +374,7 @@ class LLMService:
             return response.choices[0].message.content
 
         except Exception as e:
-            print(f"OpenAI调用失败: {e}")
+            logger.error(f"OpenAI调用失败")
             return self._mock_response(prompt)
 
     def _mock_response(self, prompt: str) -> str:

@@ -1,25 +1,75 @@
 # 预测服务
 import uuid
+import json
+import os
 from typing import Optional
 from datetime import datetime
+from pathlib import Path
 from app.agents.pipeline import AgentPipeline
 from app.api.models import (
-    Event, 
-    Prediction, 
-    PredictRequest, 
+    Event,
+    Prediction,
+    PredictRequest,
     PredictResponse,
     TrendDirection
 )
 from app.services.worldmonitor_service import worldmonitor_service
 
+# 数据持久化目录
+DATA_DIR = Path(os.getenv("DATA_DIR", "data"))
+EVENTS_FILE = DATA_DIR / "events.json"
+PREDICTIONS_FILE = DATA_DIR / "predictions.json"
+
 
 class PredictionService:
     """预测服务 - 业务逻辑层"""
-    
+
     def __init__(self):
         self.pipeline = AgentPipeline()
-        self._events_store: dict = {}  # 内存存储
+        self._events_store: dict = {}
         self._predictions_store: dict = {}
+        # 加载持久化数据
+        self._load_from_disk()
+
+    def _load_from_disk(self):
+        """从磁盘加载持久化数据"""
+        try:
+            # 确保目录存在
+            DATA_DIR.mkdir(parents=True, exist_ok=True)
+
+            # 加载事件
+            if EVENTS_FILE.exists():
+                with open(EVENTS_FILE, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                    self._events_store = {k: Event(**v) for k, v in data.items()}
+
+            # 加载预测
+            if PREDICTIONS_FILE.exists():
+                with open(PREDICTIONS_FILE, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                    self._predictions_store = {k: Prediction(**v) for k, v in data.items()}
+        except Exception:
+            # 加载失败时使用空存储
+            self._events_store = {}
+            self._predictions_store = {}
+
+    def _save_to_disk(self):
+        """保存数据到磁盘"""
+        try:
+            # 确保目录存在
+            DATA_DIR.mkdir(parents=True, exist_ok=True)
+
+            # 保存事件
+            events_data = {k: v.model_dump() for k, v in self._events_store.items()}
+            with open(EVENTS_FILE, 'w', encoding='utf-8') as f:
+                json.dump(events_data, f, ensure_ascii=False, indent=2, default=str)
+
+            # 保存预测
+            predictions_data = {k: v.model_dump() for k, v in self._predictions_store.items()}
+            with open(PREDICTIONS_FILE, 'w', encoding='utf-8') as f:
+                json.dump(predictions_data, f, ensure_ascii=False, indent=2, default=str)
+        except Exception:
+            pass  # 保存失败时静默处理，不影响主流程
     
     async def predict(self, request: PredictRequest) -> PredictResponse:
         """执行预测"""
@@ -36,12 +86,15 @@ class PredictionService:
         
         # 存储事件
         self._events_store[event.id] = event
-        
+
         # 运行Agent Pipeline
         prediction, analysis = self.pipeline.run_with_analysis(event)
 
         # 存储预测结果
         self._predictions_store[prediction.id] = prediction
+
+        # 持久化到磁盘
+        self._save_to_disk()
 
         return PredictResponse.from_prediction(prediction, analysis)
     
@@ -98,21 +151,23 @@ class PredictionService:
                 
                 # 存储事件
                 self._events_store[event.id] = event
-                
+
                 # 运行预测
                 prediction, analysis = self.pipeline.run_with_analysis(event)
-                
+
                 # 存储预测
                 self._predictions_store[prediction.id] = prediction
-                
+
                 results.append({
                     "event": event,
                     "prediction": PredictResponse.from_prediction(prediction, analysis)
                 })
             except Exception as e:
-                print(f"Error predicting event: {e}")
                 continue
-        
+
+        # 持久化到磁盘
+        self._save_to_disk()
+
         return results
     
     async def get_event(self, event_id: str) -> Optional[Event]:

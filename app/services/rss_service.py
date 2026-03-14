@@ -587,9 +587,8 @@ class RSSService:
         except Exception as e:
             print(f"[RSS] {feed_key}: 直接访问失败: {e}")
         
-        # 直接访问失败，尝试使用代理
-        # 默认代理地址（可配置）
-        proxy = os.environ.get("RSS_PROXY") or os.environ.get("HTTP_PROXY") or "http://192.168.2.115:10811"
+        # 直接访问失败，尝试使用代理（仅从环境变量读取，不使用硬编码默认值）
+        proxy = os.environ.get("RSS_PROXY") or os.environ.get("HTTP_PROXY")
         if proxy:
             proxies = {"http://": proxy, "https://": proxy}
             try:

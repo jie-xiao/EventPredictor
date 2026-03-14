@@ -6,8 +6,8 @@
  */
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Globe, RefreshCw } from 'lucide-react';
-import { api, WorldMonitorEvent, AnalysisResult, DebateResult } from '../services/api';
+import { Globe, RefreshCw, X, AlertCircle, CheckCircle } from 'lucide-react';
+import { api, WorldMonitorEvent, AnalysisResult, DebateResult, API_BASE_URL } from '../services/api';
 import GlobeMap from '../components/GlobeMap';
 
 // 抽屉和工具栏组件
@@ -17,6 +17,48 @@ import LeftDrawer, { Role } from '../components/LeftDrawer';
 import BottomDrawer, { Event } from '../components/BottomDrawer';
 
 const AUTO_REFRESH_INTERVAL = 5 * 60 * 1000; // 5 minutes
+
+// Toast 组件
+interface ToastProps {
+  message: string;
+  type: 'error' | 'success' | 'info';
+  onClose: () => void;
+}
+
+function Toast({ message, type, onClose }: ToastProps) {
+  useEffect(() => {
+    const timer = setTimeout(onClose, 5000);
+    return () => clearTimeout(timer);
+  }, [onClose]);
+
+  const bgColors = {
+    error: 'bg-red-500/20 border-red-500/30',
+    success: 'bg-green-500/20 border-green-500/30',
+    info: 'bg-primary-cyan/20 border-primary-cyan/30'
+  };
+
+  const textColors = {
+    error: 'text-red-400',
+    success: 'text-green-400',
+    info: 'text-primary-cyan'
+  };
+
+  const icons = {
+    error: <AlertCircle className="w-5 h-5" />,
+    success: <CheckCircle className="w-5 h-5" />,
+    info: <AlertCircle className="w-5 h-5" />
+  };
+
+  return (
+    <div className={`fixed top-4 right-4 z-[2000] flex items-center gap-3 px-4 py-3 rounded-lg border backdrop-blur-sm ${bgColors[type]} animate-slide-in`}>
+      <span className={textColors[type]}>{icons[type]}</span>
+      <span className="text-text-primary text-sm">{message}</span>
+      <button onClick={onClose} className="ml-2 text-text-muted hover:text-text-primary">
+        <X className="w-4 h-4" />
+      </button>
+    </div>
+  );
+}
 
 // 将 WorldMonitorEvent 转换为 BottomDrawer Event 格式
 const convertToDrawerEvent = (event: WorldMonitorEvent): Event => ({
@@ -67,6 +109,13 @@ export default function Home() {
   const [roles] = useState<Role[]>(generateMockRoles());
   const [selectedRoleId, setSelectedRoleId] = useState<string>();
 
+  // Toast 状态
+  const [toast, setToast] = useState<{ message: string; type: 'error' | 'success' | 'info' } | null>(null);
+
+  const showToast = useCallback((message: string, type: 'error' | 'success' | 'info' = 'info') => {
+    setToast({ message, type });
+  }, []);
+
   // 更新时钟
   useEffect(() => {
     const timer = setInterval(() => setTimeNow(new Date()), 1000);
@@ -78,35 +127,37 @@ export default function Home() {
     setEventsLoading(true);
     setIsRefreshing(true);
     try {
-      const response = await fetch('http://127.0.0.1:8005/api/v1/data/events?limit=50&time_range=all');
-      if (response.ok) {
-        const data = await response.json();
-        const fetchedEvents = data.events || [];
-        setEvents(fetchedEvents);
+      const response = await fetch(`${API_BASE_URL}/api/v1/data/events?limit=50&time_range=all`);
+      if (!response.ok) {
+        throw new Error(`Server error: ${response.status}`);
+      }
+      const data = await response.json();
+      const fetchedEvents = data.events || [];
+      setEvents(fetchedEvents);
 
-        // 自动选择最严重的事件
-        const eventsWithLocation = fetchedEvents.filter(
-          (e: WorldMonitorEvent) => e.location?.lat && e.location?.lon
+      // 自动选择最严重的事件
+      const eventsWithLocation = fetchedEvents.filter(
+        (e: WorldMonitorEvent) => e.location?.lat && e.location?.lon
+      );
+
+      if (eventsWithLocation.length > 0) {
+        eventsWithLocation.sort((a: WorldMonitorEvent, b: WorldMonitorEvent) =>
+          (b.severity || 3) - (a.severity || 3)
         );
-
-        if (eventsWithLocation.length > 0) {
-          eventsWithLocation.sort((a: WorldMonitorEvent, b: WorldMonitorEvent) =>
-            (b.severity || 3) - (a.severity || 3)
-          );
-          const topEvent = eventsWithLocation[0];
-          if (!selectedEvent || selectedEvent.id !== topEvent.id) {
-            setSelectedEvent(topEvent);
-          }
+        const topEvent = eventsWithLocation[0];
+        if (!selectedEvent || selectedEvent.id !== topEvent.id) {
+          setSelectedEvent(topEvent);
         }
       }
     } catch (error) {
       console.error('Failed to load events:', error);
+      showToast('Failed to load events. Please check your connection.', 'error');
     } finally {
       setEventsLoading(false);
       setIsRefreshing(false);
       setLastUpdate(new Date());
     }
-  }, [selectedEvent]);
+  }, [selectedEvent, showToast]);
 
   // 触发分析
   const triggerAnalysis = useCallback(async (event: WorldMonitorEvent) => {
@@ -143,10 +194,11 @@ export default function Home() {
     } catch (error) {
       console.error('Analysis failed:', error);
       setAnalysisResult(null);
+      showToast('Analysis failed. Please try again.', 'error');
     } finally {
       setAnalysisLoading(false);
     }
-  }, []);
+  }, [showToast]);
 
   // 初始加载
   useEffect(() => {
@@ -429,6 +481,15 @@ export default function Home() {
         bottomDrawerOpen={bottomDrawerOpen}
         isRefreshing={isRefreshing}
       />
+
+      {/* Toast 通知 */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
     </div>
   );
 }

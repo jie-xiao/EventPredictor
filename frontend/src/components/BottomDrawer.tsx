@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { ChevronUp, X, MapPin, Clock, Search, Filter, XCircle } from 'lucide-react';
 import '../styles/drawer-toolbar.css';
 
@@ -57,9 +57,29 @@ export default function BottomDrawer({
 }: BottomDrawerProps) {
   const [isInternalClose, setIsInternalClose] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedSeverities, setSelectedSeverities] = useState<number[]>([]);
   const [showFilters, setShowFilters] = useState(false);
+
+  // Debounce timer ref
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Debounce effect for search
+  useEffect(() => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    debounceTimerRef.current = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 300);
+
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, [searchQuery]);
 
   // 获取所有可用类别
   const availableCategories = useMemo(() => {
@@ -70,9 +90,9 @@ export default function BottomDrawer({
   // 过滤事件
   const filteredEvents = useMemo(() => {
     return events.filter(event => {
-      // 搜索过滤
-      if (searchQuery) {
-        const query = searchQuery.toLowerCase();
+      // 搜索过滤（使用防抖后的值）
+      if (debouncedSearchQuery) {
+        const query = debouncedSearchQuery.toLowerCase();
         const titleMatch = event.title.toLowerCase().includes(query);
         const descMatch = event.description?.toLowerCase().includes(query);
         const locMatch = event.location?.toLowerCase().includes(query);
@@ -97,7 +117,7 @@ export default function BottomDrawer({
 
       return true;
     });
-  }, [events, searchQuery, selectedCategories, selectedSeverities]);
+  }, [events, debouncedSearchQuery, selectedCategories, selectedSeverities]);
 
   const stats = {
     critical: events.filter((e) => e.severity >= 4).length,
@@ -148,11 +168,12 @@ export default function BottomDrawer({
 
   const clearFilters = () => {
     setSearchQuery('');
+    setDebouncedSearchQuery('');
     setSelectedCategories([]);
     setSelectedSeverities([]);
   };
 
-  const hasActiveFilters = searchQuery || selectedCategories.length > 0 || selectedSeverities.length > 0;
+  const hasActiveFilters = debouncedSearchQuery || selectedCategories.length > 0 || selectedSeverities.length > 0;
 
   return (
     <div className={`drawer-bottom ${isOpen ? 'open' : ''}`}>
