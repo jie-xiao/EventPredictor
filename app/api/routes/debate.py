@@ -21,7 +21,7 @@ class DebateRequest(BaseModel):
     category: str = Field(default="Other", description="事件类别")
     importance: int = Field(default=3, ge=1, le=5, description="重要性 1-5")
     timestamp: Optional[str] = Field(default=None, description="时间戳")
-    roles: List[str] = Field(..., min_items=2, description="参与辩论的角色ID列表（至少2个）")
+    roles: List[str] = Field(..., min_length=2, description="参与辩论的角色ID列表（至少2个）")
     depth: str = Field(default="standard", description="辩论深度 (quick/standard/deep)")
 
 

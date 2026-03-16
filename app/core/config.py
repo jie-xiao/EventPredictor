@@ -3,23 +3,22 @@ import os
 from pathlib import Path
 from typing import Optional
 import yaml
-from pydantic import Field
-from pydantic_settings import BaseSettings
+from pydantic import Field, ConfigDict
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class LLMConfig(BaseSettings):
     """LLM配置"""
+    model_config = SettingsConfigDict(env_prefix="")
     provider: str = Field(default="minimax", description="LLM提供商: anthropic | openai | minimax | mock")
     model: str = Field(default="minimax-cn/MiniMax-M2.1", description="模型名称")
     temperature: float = Field(default=0.7, description="温度参数")
     max_tokens: int = Field(default=2000, description="最大token数")
-    
-    class Config:
-        env_prefix = ""
 
 
 class WorldMonitorConfig(BaseSettings):
     """WorldMonitor数据源配置"""
+    model_config = SettingsConfigDict(env_prefix="WM_")
     # 旧配置（保留兼容）
     rss_endpoint: str = "https://worldmonitor/api/rss-proxy"
     polymarket_endpoint: str = "https://worldmonitor/api/polymarket"
@@ -28,32 +27,25 @@ class WorldMonitorConfig(BaseSettings):
     local_api_url: str = "http://localhost:46123"
     api_token: Optional[str] = None
     timeout: int = 30
-    
-    class Config:
-        env_prefix = "WM_"
 
 
 class APIConfig(BaseSettings):
     """API服务配置"""
+    model_config = SettingsConfigDict(env_prefix="API_")
     host: str = "0.0.0.0"
     port: int = 8000
     debug: bool = False
     title: str = "EventPredictor API"
     version: str = "1.0.0"
     description: str = "全球局势推演决策系统"
-    
-    class Config:
-        env_prefix = "API_"
 
 
 class AgentConfig(BaseSettings):
     """Agent配置"""
+    model_config = SettingsConfigDict(extra="allow")
     info_collector_prompt: str = "你是一个信息收集专家。根据给定的事件，收集相关的背景信息、来源可靠性分析、以及可能影响预测的关键信息。"
     analyzer_prompt: str = "你是一个深度分析专家。根据收集的信息，分析事件的影响范围、持续时间、关键因素和市场情绪。"
     predictor_prompt: str = "你是一个趋势预测专家。根据分析结果，给出未来走势预测，包含趋势方向、置信度和影响因素。"
-    
-    class Config:
-        extra = "allow"  # 允许额外字段
 
 
 class PredictionConfig(BaseSettings):

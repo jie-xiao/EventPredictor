@@ -2,6 +2,7 @@
 import os
 import time
 from collections import defaultdict
+from contextlib import asynccontextmanager
 from typing import Dict, Tuple
 
 # 解决HTTP代理导致的localhost请求503问题
@@ -80,13 +81,27 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         return await call_next(request)
 
 
+# Lifespan 上下文管理器
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """应用生命周期管理"""
+    # Startup
+    print(f"EventPredictor v{config.api.version} starting...")
+    print(f"LLM Provider: {config.llm.provider}")
+    print(f"Model: {config.llm.model}")
+    yield
+    # Shutdown
+    print("EventPredictor shutting down...")
+
+
 # 创建FastAPI应用
 app = FastAPI(
     title=config.api.title,
     version=config.api.version,
     description=config.api.description,
     docs_url="/docs",
-    redoc_url="/redoc"
+    redoc_url="/redoc",
+    lifespan=lifespan
 )
 
 # 添加限流中间件 - Section 16.3
@@ -117,20 +132,6 @@ app.include_router(pattern_router)
 # P1阶段新增：沙盘推演和报告生成路由
 app.include_router(sandbox_router)
 app.include_router(report_router)
-
-
-@app.on_event("startup")
-async def startup_event():
-    """应用启动事件"""
-    print(f"EventPredictor v{config.api.version} starting...")
-    print(f"LLM Provider: {config.llm.provider}")
-    print(f"Model: {config.llm.model}")
-
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    """应用关闭事件"""
-    print("EventPredictor shutting down...")
 
 
 # 导出app实例

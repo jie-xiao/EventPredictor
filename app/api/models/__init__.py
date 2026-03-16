@@ -2,7 +2,7 @@
 from datetime import datetime
 from enum import Enum
 from typing import List, Optional, Dict, Any
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class TrendDirection(str, Enum):
@@ -70,9 +70,9 @@ class Event(BaseModel):
     # 中文显示字段
     category_label: Optional[str] = Field(default=None, description="中文分类标签")
     source_label: Optional[str] = Field(default=None, description="中文来源名称")
-    
-    class Config:
-        json_schema_extra = {
+
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "id": "evt-001",
                 "title": "Federal Reserve cuts rates by 50 basis points",
@@ -87,6 +87,7 @@ class Event(BaseModel):
                 "severity": 5
             }
         }
+    )
 
 
 class CollectedInfo(BaseModel):
@@ -121,9 +122,9 @@ class Prediction(BaseModel):
     reasoning: str = Field(..., description="推理过程")
     time_horizon: str = Field(..., description="时间范围")
     factors: List[str] = Field(default_factory=list, description="影响因素")
-    
-    class Config:
-        json_schema_extra = {
+
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "id": "pred-001",
                 "event_id": "evt-001",
@@ -134,6 +135,7 @@ class Prediction(BaseModel):
                 "factors": ["positive_event", "market_sentiment"]
             }
         }
+    )
 
 
 # ============ Response Models ============

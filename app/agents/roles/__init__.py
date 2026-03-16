@@ -24,11 +24,6 @@ class AgentRole(BaseModel):
     language_style: str = Field(..., description="语言风格")
     focus_points: List[str] = Field(default_factory=list, description="关注点")
     system_prompt: str = Field(..., description="系统提示词")
-    
-    class Config:
-        json_encoders = {
-            RoleCategory: lambda v: v.value
-        }
 
 
 # 角色定义
