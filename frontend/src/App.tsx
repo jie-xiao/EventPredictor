@@ -2,6 +2,8 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Home as HomeIcon, AlertCircle } from 'lucide-react';
 import Home from './pages/Home';
 import AnalysisResult from './pages/AnalysisResult';
+import KnowledgeGraphView from './components/analysis/KnowledgeGraphView';
+import MonitorPanel from './components/analysis/MonitorPanel';
 import './index.css';
 
 function NotFound() {
@@ -32,6 +34,10 @@ function App() {
         {/* 主页 - 全屏地球+抽屉系统 */}
         <Route path="/" element={<Home />} />
         <Route path="/analysis" element={<AnalysisResult />} />
+        {/* P2: 知识图谱 */}
+        <Route path="/knowledge-graph" element={<KnowledgeGraphView />} />
+        {/* P2: 事件监控 */}
+        <Route path="/monitor" element={<MonitorPanel />} />
         {/* Redirect old routes */}
         <Route path="/dashboard" element={<Navigate to="/" replace />} />
         <Route path="/drawers" element={<Navigate to="/" replace />} />

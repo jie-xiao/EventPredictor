@@ -737,3 +737,166 @@ export async function getInfluenceMetricsInfo(): Promise<any> {
   }
   return response.json();
 }
+
+// ============ P2: 知识图谱 API ============
+
+// 实体类型
+export interface KnowledgeGraphEntity {
+  id: string;
+  name: string;
+  type: string;
+  aliases?: string[];
+  properties?: Record<string, any>;
+  importance?: number;
+  created_at?: string;
+}
+
+// 关系类型
+export interface KnowledgeGraphRelation {
+  id: string;
+  source: string;
+  target: string;
+  type: string;
+  weight?: number;
+  properties?: Record<string, any>;
+}
+
+// 获取实体列表
+export async function getEntities(params?: { type?: string; search?: string; limit?: number }): Promise<{ success: boolean; data: KnowledgeGraphEntity[] }> {
+  const query = new URLSearchParams();
+  if (params?.type) query.set('entity_type', params.type);
+  if (params?.search) query.set('search', params.search);
+  if (params?.limit) query.set('limit', String(params.limit));
+  const response = await fetch(`${API_BASE_URL}/api/v1/knowledge-graph/entities?${query}`);
+  return response.json();
+}
+
+// 获取关系列表
+export async function getRelations(params?: { source_id?: string; target_id?: string; limit?: number }): Promise<any> {
+  const query = new URLSearchParams();
+  if (params?.source_id) query.set('source_id', params.source_id);
+  if (params?.target_id) query.set('target_id', params.target_id);
+  if (params?.limit) query.set('limit', String(params.limit));
+  const response = await fetch(`${API_BASE_URL}/api/v1/knowledge-graph/relations?${query}`);
+  return response.json();
+}
+
+// 创建实体
+export async function createEntity(entity: { name: string; type: string; aliases?: string[]; properties?: any }): Promise<any> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/knowledge-graph/entities`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(entity)
+  });
+  return response.json();
+}
+
+// 创建关系
+export async function createRelation(relation: { source_id: string; target_id: string; type: string; weight?: number }): Promise<any> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/knowledge-graph/relations`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(relation)
+  });
+  return response.json();
+}
+
+// 从文本提取实体
+export async function extractEntities(text: string, eventId?: string): Promise<any> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/knowledge-graph/extract`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text, event_id: eventId })
+  });
+  return response.json();
+}
+
+// 获取图谱统计
+export async function getKnowledgeGraphStats(): Promise<any> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/knowledge-graph/statistics`);
+  return response.json();
+}
+
+// ============ P2: 事件监控 API ============
+
+// 告警规则
+export interface MonitorRule {
+  id: string;
+  name: string;
+  description?: string;
+  enabled: boolean;
+  severity: string;
+  field: string;
+  operator: string;
+  value: string;
+  cooldown_minutes: number;
+}
+
+// 告警
+export interface MonitorAlert {
+  id: string;
+  rule_id: string;
+  rule_name: string;
+  severity: string;
+  event_data: any;
+  message: string;
+  created_at: string;
+  acknowledged: boolean;
+}
+
+// 获取规则列表
+export async function getMonitorRules(): Promise<{ success: boolean; data: MonitorRule[] }> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/monitor/rules`);
+  return response.json();
+}
+
+// 创建规则
+export async function createMonitorRule(rule: { name: string; severity: string; field: string; operator: string; value: string }): Promise<any> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/monitor/rules`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(rule)
+  });
+  return response.json();
+}
+
+// 更新规则
+export async function updateMonitorRule(ruleId: string, updates: Partial<MonitorRule>): Promise<any> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/monitor/rules/${ruleId}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(updates)
+  });
+  return response.json();
+}
+
+// 删除规则
+export async function deleteMonitorRule(ruleId: string): Promise<any> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/monitor/rules/${ruleId}`, {
+    method: 'DELETE'
+  });
+  return response.json();
+}
+
+// 获取告警列表
+export async function getMonitorAlerts(params?: { severity?: string; limit?: number }): Promise<any> {
+  const query = new URLSearchParams();
+  if (params?.severity) query.set('severity', params.severity);
+  if (params?.limit) query.set('limit', String(params.limit));
+  const response = await fetch(`${API_BASE_URL}/api/v1/monitor/alerts?${query}`);
+  return response.json();
+}
+
+// 确认告警
+export async function acknowledgeAlert(alertId: string): Promise<any> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/monitor/alerts/${alertId}/acknowledge`, {
+    method: 'POST'
+  });
+  return response.json();
+}
+
+// 获取监控统计
+export async function getMonitorStats(): Promise<any> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/monitor/statistics`);
+  return response.json();
+}
