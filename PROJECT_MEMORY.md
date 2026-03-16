@@ -5,7 +5,7 @@
 - 功能：多Agent角色分析 + 事态推演系统
 - 技术栈：FastAPI + React + TypeScript + react-globe.gl
 - 需求版本：v4.0 (2026-03-13 修订)
-- 当前阶段：Phase 4 完成 ✅
+- 当前阶段：P1阶段完成 ✅ (2026-03-16)
 
 ## 核心功能
 
@@ -51,6 +51,12 @@
 | /api/v1/analysis/roles | GET | 获取所有角色 |
 | /api/v1/analysis/categories | GET | 获取角色类别 |
 | /api/v1/analysis/multi | POST | 多Agent分析 |
+| /api/v1/sandbox/evolve | POST | 沙盘推演（P1） |
+| /api/v1/sandbox/decision/analyze | POST | 决策影响分析（P1） |
+| /api/v1/report/generate | POST | 生成报告（P1） |
+| /api/v1/report/quick | POST | 快速报告（P1） |
+| /api/v1/report/list | GET | 报告列表（P1） |
+| /api/v1/report/{id} | GET | 获取报告（P1） |
 
 ## 新增组件
 
@@ -159,3 +165,48 @@ curl -X POST http://127.0.0.1:8005/api/v1/analysis/multi \
 ## 已知问题
 - WorldMonitor API需要启动才能获取实时数据
 - 首次加载可能需要下载3D纹理资源
+
+---
+
+## P1阶段：增强沙盘推演 + 报告生成 ✅ (2026-03-16)
+
+### 新增服务
+
+#### 1. 沙盘推演服务 (`app/services/sandbox_service.py`)
+- **多步推演** - 支持自定义步数（1-10步）推演事件发展
+- **分支场景** - 每步生成多个可能的分支（乐观/基准/悲观/黑天鹅）
+- **决策点分析** - 自动识别关键决策点及其影响
+- **路径追踪** - 记录完整演化路径并推荐最优路径
+
+#### 2. 报告生成服务 (`app/services/report_service.py`)
+- **多格式支持** - Markdown / HTML / PDF
+- **多报告类型** - full（完整）/ summary（摘要）/ executive（执行）/ technical（技术）
+- **自动章节生成** - 根据报告类型自动生成相应章节
+- **快速报告** - 支持API直接返回简要报告
+
+### 新增API路由
+
+#### 沙盘推演 (`app/api/routes/sandbox.py`)
+| 接口 | 方法 | 说明 |
+|------|------|------|
+| /api/v1/sandbox/evolve | POST | 执行沙盘推演 |
+| /api/v1/sandbox/decision/analyze | POST | 分析决策影响 |
+
+#### 报告生成 (`app/api/routes/report.py`)
+| 接口 | 方法 | 说明 |
+|------|------|------|
+| /api/v1/report/generate | POST | 生成完整报告 |
+| /api/v1/report/quick | POST | 快速生成简要报告 |
+| /api/v1/report/list | GET | 列出已生成报告 |
+| /api/v1/report/{id} | GET | 获取报告内容 |
+
+### P1阶段验收
+- [x] 沙盘推演服务实现
+- [x] 多步推演功能（1-10步）
+- [x] 分支场景生成
+- [x] 决策点识别与分析
+- [x] 报告生成服务实现
+- [x] 多格式支持（Markdown/HTML）
+- [x] 多报告类型支持
+- [x] API路由集成到主应用
+- [x] 文档更新
