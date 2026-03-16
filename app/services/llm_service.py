@@ -85,6 +85,36 @@ class ScenarioResponse(BaseModel):
     recommendation: str
 
 
+class ReactionChainResponse(BaseModel):
+    """反应链分析响应结构"""
+    emotion: str
+    action: str
+    statement: str
+    stance_change: str = ""
+    confidence: float
+    reasoning: str
+    influenced_by: List[str] = []
+
+
+class EventChainInfluenceResponse(BaseModel):
+    """事件链影响分析响应结构"""
+    source_event: str
+    target_event: str
+    influence_type: str  # "amplify", "attenuate", "neutral", "transform"
+    influence_strength: float
+    affected_aspects: List[str]
+    reasoning: str
+
+
+class TimelinePredictionResponse(BaseModel):
+    """时间线预测响应结构"""
+    predictions: List[Dict[str, Any]]
+    confidence_trend: List[float]
+    key_milestones: List[str]
+    potential_branches: List[Dict[str, Any]]
+    overall_assessment: str
+
+
 class LLMService:
     """LLM服务 - 封装LLM调用"""
 
