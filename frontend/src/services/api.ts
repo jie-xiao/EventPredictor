@@ -408,3 +408,332 @@ export interface ScenarioTemplate {
   scenarios: string[];
   timeframes: string[];
 }
+
+// ============ 反应链类型定义 ============
+
+// 反应链请求
+export interface ReactionChainRequest {
+  event_id: string;
+  title: string;
+  description: string;
+  category?: string;
+  importance?: number;
+  timestamp?: string;
+  roles: string[];
+  max_rounds?: number;
+  convergence_threshold?: number;
+}
+
+// 单个反应
+export interface ChainReaction {
+  emotion: string;
+  action: string;
+  statement: string;
+  stance_change?: string;
+  confidence?: number;
+  context_aware?: boolean;
+}
+
+// 反应轮次
+export interface ReactionRoundData {
+  round_number: number;
+  role_id: string;
+  role_name: string;
+  reaction: ChainReaction;
+  affected_by: string[];
+  timestamp: string;
+}
+
+// 时间线事件
+export interface TimelineEventData {
+  id: string;
+  time: string;
+  event_type: string;
+  description: string;
+  involved_roles: string[];
+  details: Record<string, any>;
+  timestamp: string;
+}
+
+// 反应演变
+export interface ReactionEvolution {
+  role_name: string;
+  rounds: number;
+  emotion_evolution: string[];
+  action_evolution: string[];
+  confidence_evolution?: number[];
+  confidence_trend?: 'increasing' | 'decreasing' | 'stable';
+  stance_changes: string[];
+  summary: string;
+}
+
+// 影响力网络节点
+export interface InfluenceNode {
+  id: string;
+  name: string;
+  outgoing_influence: number;
+  incoming_influence: number;
+  opinion_leadership: number;
+  receptivity: number;
+}
+
+// 影响力网络边
+export interface InfluenceEdge {
+  source: string;
+  target: string;
+  weight: number;
+  type: 'support' | 'oppose' | 'neutral';
+  count: number;
+}
+
+// 影响力网络
+export interface InfluenceNetwork {
+  nodes: InfluenceNode[];
+  edges: InfluenceEdge[];
+  total_relations: number;
+}
+
+// 意见领袖
+export interface OpinionLeader {
+  role_id: string;
+  role_name: string;
+  leadership_score: number;
+  outgoing_influence: number;
+}
+
+// 易受影响者
+export interface MostInfluenced {
+  role_id: string;
+  role_name: string;
+  receptivity_score: number;
+  incoming_influence: number;
+}
+
+// 状态快照
+export interface StateSnapshot {
+  time: string;
+  metrics: {
+    average_confidence: number;
+    positive_emotion_ratio: number;
+    action_diversity: number;
+    total_roles: number;
+  };
+  changes: string[];
+}
+
+// 反应链结论
+export interface ReactionChainConclusion {
+  total_reactions: number;
+  rounds_executed: number;
+  converged?: boolean;
+  final_reactions: Record<string, { role_name: string; reaction: ChainReaction }>;
+  key_tensions: { type: string; description: string; severity: string; involved_roles?: string[] }[];
+  consensus: string[];
+  evolution_summary: Record<string, ReactionEvolution>;
+  opinion_leaders?: OpinionLeader[];
+  influence_summary?: {
+    total_nodes: number;
+    network_density: number;
+  };
+  trend_assessment: string;
+}
+
+// 反应链结果
+export interface ReactionChainResult {
+  event_id: string;
+  title: string;
+  description: string;
+  category: string;
+  total_rounds: number;
+  converged?: boolean;
+  timeline: TimelineEventData[];
+  timeline_tree?: any;
+  state_evolution?: StateSnapshot[];
+  evolution: Record<string, ReactionEvolution>;
+  all_reactions: ReactionRoundData[];
+  influence_network?: InfluenceNetwork;
+  opinion_leaders?: OpinionLeader[];
+  most_influenced?: MostInfluenced[];
+  convergence_trend?: number[];
+  conclusion: ReactionChainConclusion;
+  timestamp: string;
+}
+
+// 事件链类型
+export interface ChainEvent {
+  event_id: string;
+  title: string;
+  description: string;
+  category?: string;
+  importance?: number;
+  timestamp?: string;
+}
+
+export interface EventChainRequest {
+  events: ChainEvent[];
+  roles: string[];
+  max_rounds_per_event?: number;
+}
+
+export interface EventChainResult {
+  event_count: number;
+  events: string[];
+  chain_results: any[];
+  inter_event_analysis: any;
+  timeline: any[];
+  conclusion: any;
+  timestamp: string;
+}
+
+// 分析深度选项（反应链）
+export interface ChainDepth {
+  id: string;
+  name: string;
+  description: string;
+  rounds: number;
+  estimated_time: string;
+}
+
+// 分析模式
+export interface AnalysisMode {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+}
+
+// ============ 反应链API函数 ============
+
+// 执行反应链分析
+export async function analyzeReactionChain(request: ReactionChainRequest): Promise<ReactionChainResult> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/analysis/reaction-chain/analyze`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(request)
+  });
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ detail: 'Reaction chain analysis failed' }));
+    throw new Error(error.detail || 'Reaction chain analysis failed');
+  }
+  return response.json();
+}
+
+// 执行事件链分析
+export async function analyzeEventChain(request: EventChainRequest): Promise<EventChainResult> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/analysis/reaction-chain/event-chain`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(request)
+  });
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ detail: 'Event chain analysis failed' }));
+    throw new Error(error.detail || 'Event chain analysis failed');
+  }
+  return response.json();
+}
+
+// 获取反应链深度选项
+export async function getReactionChainDepths(): Promise<ChainDepth[]> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/analysis/reaction-chain/depths`);
+  if (!response.ok) {
+    return [
+      { id: '2', name: '快速分析', description: '2轮反应链', rounds: 2, estimated_time: '30秒' },
+      { id: '3', name: '标准分析', description: '3轮反应链', rounds: 3, estimated_time: '1分钟' },
+      { id: '5', name: '深度分析', description: '5轮反应链', rounds: 5, estimated_time: '2分钟' }
+    ];
+  }
+  const data = await response.json();
+  return data.depths;
+}
+
+// 获取分析模式
+export async function getAnalysisModes(): Promise<AnalysisMode[]> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/analysis/reaction-chain/modes`);
+  if (!response.ok) {
+    return [
+      { id: 'reaction_chain', name: '反应链模式', description: '分析单事件中各方反应的相互影响', icon: 'link' },
+      { id: 'event_chain', name: '事件链模式', description: '分析多个相关事件的串联影响', icon: 'sequence' }
+    ];
+  }
+  const data = await response.json();
+  return data.modes;
+}
+
+// 时间线预测请求
+export interface TimelinePredictionRequest {
+  event: {
+    id: string;
+    title: string;
+    description: string;
+    category?: string;
+    importance?: number;
+  };
+  roles: string[];
+  prediction_horizon?: number;
+}
+
+// 时间线预测结果
+export interface TimelinePredictionResult {
+  event_id: string;
+  event_title: string;
+  prediction_horizon: number;
+  predictions: Array<{
+    day: number;
+    time: string;
+    predicted_state: string;
+    confidence: number;
+    key_actors: string[];
+    potential_events: string[];
+  }>;
+  confidence_trend: number[];
+  key_milestones: string[];
+  potential_branches: Array<{
+    id: string;
+    name: string;
+    description: string;
+    probability: number;
+  }>;
+  overall_assessment: string;
+  based_on_rounds: number;
+  timestamp: string;
+}
+
+// 执行时间线预测
+export async function predictTimeline(request: TimelinePredictionRequest): Promise<TimelinePredictionResult> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/analysis/reaction-chain/timeline-prediction`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(request)
+  });
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ detail: 'Timeline prediction failed' }));
+    throw new Error(error.detail || 'Timeline prediction failed');
+  }
+  return response.json();
+}
+
+// 获取收敛信息
+export async function getConvergenceInfo(): Promise<any> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/analysis/reaction-chain/convergence-info`);
+  if (!response.ok) {
+    return {
+      description: '反应链会在各方法反应趋于稳定时自动收敛',
+      default_threshold: 0.85
+    };
+  }
+  return response.json();
+}
+
+// 获取影响力指标说明
+export async function getInfluenceMetricsInfo(): Promise<any> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/analysis/reaction-chain/influence-metrics`);
+  if (!response.ok) {
+    return {
+      metrics: {
+        opinion_leadership_score: { name: '意见领袖指数', description: '衡量一个角色对其他角色的影响力' },
+        influence_receptivity_score: { name: '受影响程度指数', description: '衡量一个角色被其他角色影响的程度' }
+      }
+    };
+  }
+  return response.json();
+}

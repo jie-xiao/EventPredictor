@@ -3,12 +3,16 @@
  *
  * 全屏地球 + 抽屉系统布局
  * 包含：右侧分析抽屉、左侧角色抽屉、底部事件抽屉、悬浮工具栏
+ *
+ * 设计方向：极简初始状态 + 抽屉展开 + 深色科技风格
+ * 功能：页面加载时自动批量分析所有事件
  */
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Globe, RefreshCw, X, AlertCircle, CheckCircle } from 'lucide-react';
-import { api, WorldMonitorEvent, AnalysisResult, DebateResult, API_BASE_URL } from '../services/api';
+import { Globe, RefreshCw, X, AlertCircle, CheckCircle, Loader2, Play, Pause } from 'lucide-react';
+import { api, WorldMonitorEvent, AnalysisResult, DebateResult, API_BASE_URL, analyzeReactionChain, ReactionChainResult } from '../services/api';
 import GlobeMap from '../components/GlobeMap';
+import ReactionChainView from '../components/analysis/ReactionChainView';
 
 // 抽屉和工具栏组件
 import FloatingToolbar from '../components/FloatingToolbar';
@@ -17,6 +21,25 @@ import LeftDrawer, { Role } from '../components/LeftDrawer';
 import BottomDrawer, { Event } from '../components/BottomDrawer';
 
 const AUTO_REFRESH_INTERVAL = 5 * 60 * 1000; // 5 minutes
+
+// 分析状态类型
+type AnalysisStatus = 'pending' | 'analyzing' | 'completed' | 'error';
+
+// 事件分析状态映射
+interface EventAnalysisState {
+  eventId: string;
+  status: AnalysisStatus;
+  result?: AnalysisResult | DebateResult;
+  error?: string;
+}
+
+// 批量分析进度
+interface BatchAnalysisProgress {
+  total: number;
+  completed: number;
+  current: string | null;
+  isRunning: boolean;
+}
 
 // Toast 组件
 interface ToastProps {
@@ -100,7 +123,7 @@ export default function Home() {
   const [lastUpdate, setLastUpdate] = useState(new Date());
   const [timeNow, setTimeNow] = useState(new Date());
 
-  // 抽屉状态
+  // 抽屉状态 - 极简初始状态：所有抽屉默认关闭
   const [rightDrawerOpen, setRightDrawerOpen] = useState(false);
   const [leftDrawerOpen, setLeftDrawerOpen] = useState(false);
   const [bottomDrawerOpen, setBottomDrawerOpen] = useState(false);
@@ -109,8 +132,25 @@ export default function Home() {
   const [roles] = useState<Role[]>(generateMockRoles());
   const [selectedRoleId, setSelectedRoleId] = useState<string>();
 
+  // 反应链分析状态
+  const [reactionChainResult, setReactionChainResult] = useState<ReactionChainResult | null>(null);
+  const [reactionChainLoading, setReactionChainLoading] = useState(false);
+  const [analysisMode, setAnalysisMode] = useState<'standard' | 'reaction_chain'>('standard');
+
   // Toast 状态
   const [toast, setToast] = useState<{ message: string; type: 'error' | 'success' | 'info' } | null>(null);
+
+  // 批量分析状态
+  const [eventAnalysisStates, setEventAnalysisStates] = useState<Map<string, EventAnalysisState>>(new Map());
+  const [batchProgress, setBatchProgress] = useState<BatchAnalysisProgress>({
+    total: 0,
+    completed: 0,
+    current: null,
+    isRunning: false
+  });
+
+  // 批量分析控制
+  const batchAnalysisRef = useRef<{ abort: boolean }>({ abort: false });
 
   const showToast = useCallback((message: string, type: 'error' | 'success' | 'info' = 'info') => {
     setToast({ message, type });
@@ -135,20 +175,18 @@ export default function Home() {
       const fetchedEvents = data.events || [];
       setEvents(fetchedEvents);
 
-      // 自动选择最严重的事件
-      const eventsWithLocation = fetchedEvents.filter(
-        (e: WorldMonitorEvent) => e.location?.lat && e.location?.lon
-      );
+      // 初始化所有事件的分析状态为 pending
+      const newStates = new Map<string, EventAnalysisState>();
+      fetchedEvents.forEach((event: WorldMonitorEvent) => {
+        newStates.set(event.id, {
+          eventId: event.id,
+          status: 'pending'
+        });
+      });
+      setEventAnalysisStates(newStates);
 
-      if (eventsWithLocation.length > 0) {
-        eventsWithLocation.sort((a: WorldMonitorEvent, b: WorldMonitorEvent) =>
-          (b.severity || 3) - (a.severity || 3)
-        );
-        const topEvent = eventsWithLocation[0];
-        if (!selectedEvent || selectedEvent.id !== topEvent.id) {
-          setSelectedEvent(topEvent);
-        }
-      }
+      // 极简初始状态：不自动选择事件
+      // 用户需要主动点击地球或打开底部抽屉选择事件
     } catch (error) {
       console.error('Failed to load events:', error);
       showToast('Failed to load events. Please check your connection.', 'error');
@@ -157,11 +195,21 @@ export default function Home() {
       setIsRefreshing(false);
       setLastUpdate(new Date());
     }
-  }, [selectedEvent, showToast]);
+  }, [showToast]);
 
-  // 触发分析
+  // 触发单个事件分析
   const triggerAnalysis = useCallback(async (event: WorldMonitorEvent) => {
     setAnalysisLoading(true);
+    // 更新该事件的分析状态为 analyzing
+    setEventAnalysisStates(prev => {
+      const newMap = new Map(prev);
+      const currentState = newMap.get(event.id);
+      if (currentState) {
+        newMap.set(event.id, { ...currentState, status: 'analyzing' });
+      }
+      return newMap;
+    });
+
     try {
       const categoryRoleMap: Record<string, string[]> = {
         'Monetary Policy': ['cn_gov', 'us_gov', 'institutional_investor', 'retail_investor'],
@@ -189,16 +237,228 @@ export default function Home() {
       const result = await api.analyze(request);
       setAnalysisResult(result);
 
+      // 更新该事件的分析状态为 completed
+      setEventAnalysisStates(prev => {
+        const newMap = new Map(prev);
+        const currentState = newMap.get(event.id);
+        if (currentState) {
+          newMap.set(event.id, { ...currentState, status: 'completed', result });
+        }
+        return newMap;
+      });
+
       sessionStorage.setItem('analysisResult', JSON.stringify(result));
       sessionStorage.setItem('selectedEvent', JSON.stringify(event));
     } catch (error) {
       console.error('Analysis failed:', error);
       setAnalysisResult(null);
+      // 更新该事件的分析状态为 error
+      setEventAnalysisStates(prev => {
+        const newMap = new Map(prev);
+        const currentState = newMap.get(event.id);
+        if (currentState) {
+          newMap.set(event.id, {
+            ...currentState,
+            status: 'error',
+            error: error instanceof Error ? error.message : 'Analysis failed'
+          });
+        }
+        return newMap;
+      });
       showToast('Analysis failed. Please try again.', 'error');
     } finally {
       setAnalysisLoading(false);
     }
   }, [showToast]);
+
+  // 触发反应链分析
+  const triggerReactionChainAnalysis = useCallback(async (event: WorldMonitorEvent) => {
+    setReactionChainLoading(true);
+
+    try {
+      const categoryRoleMap: Record<string, string[]> = {
+        'Monetary Policy': ['cn_gov', 'us_gov', 'institutional_investor', 'retail_investor'],
+        'Geopolitical': ['cn_gov', 'us_gov', 'eu_gov', 'mainstream_media'],
+        'Economic': ['institutional_investor', 'financial_giant', 'intellectual', 'mainstream_media'],
+        'Technology': ['tech_giant', 'intellectual', 'venture_capitalist', 'social_media'],
+        'Trade': ['cn_gov', 'us_gov', 'tech_giant', 'financial_giant'],
+        'Social': ['common_public', 'intellectual', 'netizen', 'mainstream_media'],
+        'default': ['cn_gov', 'us_gov', 'institutional_investor', 'intellectual', 'mainstream_media']
+      };
+
+      const selectedRoles = categoryRoleMap[event.category] || categoryRoleMap.default;
+
+      const request = {
+        event_id: event.id,
+        title: event.title,
+        description: event.description,
+        category: event.category,
+        importance: event.severity || 3,
+        timestamp: event.timestamp,
+        roles: selectedRoles,
+        max_rounds: 3,
+        convergence_threshold: 0.85
+      };
+
+      const result = await analyzeReactionChain(request);
+      setReactionChainResult(result);
+      setAnalysisMode('reaction_chain');
+      sessionStorage.setItem('reactionChainResult', JSON.stringify(result));
+      showToast('Reaction chain analysis completed!', 'success');
+    } catch (error) {
+      console.error('Reaction chain analysis failed:', error);
+      setReactionChainResult(null);
+      showToast('Reaction chain analysis failed. Please try again.', 'error');
+    } finally {
+      setReactionChainLoading(false);
+    }
+  }, [showToast]);
+
+  // 批量分析所有事件
+  const startBatchAnalysis = useCallback(async () => {
+    if (batchProgress.isRunning) return;
+
+    // 获取所有待分析的事件（优先分析高严重度的）
+    const pendingEvents = events
+      .filter(e => {
+        const state = eventAnalysisStates.get(e.id);
+        return state?.status === 'pending' || state?.status === 'error';
+      })
+      .sort((a, b) => (b.severity || 3) - (a.severity || 3));
+
+    if (pendingEvents.length === 0) {
+      showToast('All events have been analyzed', 'info');
+      return;
+    }
+
+    batchAnalysisRef.current.abort = false;
+    setBatchProgress({
+      total: events.length,
+      completed: events.length - pendingEvents.length,
+      current: null,
+      isRunning: true
+    });
+
+    showToast(`Starting batch analysis of ${pendingEvents.length} events...`, 'info');
+
+    for (let i = 0; i < pendingEvents.length; i++) {
+      if (batchAnalysisRef.current.abort) {
+        showToast('Batch analysis stopped', 'info');
+        break;
+      }
+
+      const event = pendingEvents[i];
+      setBatchProgress(prev => ({
+        ...prev,
+        current: event.title,
+        completed: prev.completed
+      }));
+
+      try {
+        const categoryRoleMap: Record<string, string[]> = {
+          'Monetary Policy': ['cn_gov', 'us_gov', 'institutional_investor', 'retail_investor'],
+          'Geopolitical': ['cn_gov', 'us_gov', 'eu_gov', 'mainstream_media'],
+          'Economic': ['institutional_investor', 'financial_giant', 'intellectual', 'mainstream_media'],
+          'Technology': ['tech_giant', 'intellectual', 'venture_capitalist', 'social_media'],
+          'Trade': ['cn_gov', 'us_gov', 'tech_giant', 'financial_giant'],
+          'Social': ['common_public', 'intellectual', 'netizen', 'mainstream_media'],
+          'default': ['cn_gov', 'us_gov', 'institutional_investor', 'intellectual', 'mainstream_media']
+        };
+
+        const selectedRoles = categoryRoleMap[event.category] || categoryRoleMap.default;
+
+        // 更新状态为 analyzing
+        setEventAnalysisStates(prev => {
+          const newMap = new Map(prev);
+          const currentState = newMap.get(event.id);
+          if (currentState) {
+            newMap.set(event.id, { ...currentState, status: 'analyzing' });
+          }
+          return newMap;
+        });
+
+        const result = await api.analyze({
+          event_id: event.id,
+          title: event.title,
+          description: event.description,
+          category: event.category,
+          importance: event.severity || 3,
+          timestamp: event.timestamp,
+          roles: selectedRoles,
+          depth: 'standard'
+        });
+
+        // 更新状态为 completed
+        setEventAnalysisStates(prev => {
+          const newMap = new Map(prev);
+          const currentState = newMap.get(event.id);
+          if (currentState) {
+            newMap.set(event.id, { ...currentState, status: 'completed', result });
+          }
+          return newMap;
+        });
+
+        setBatchProgress(prev => ({
+          ...prev,
+          completed: prev.completed + 1
+        }));
+      } catch (error) {
+        console.error(`Failed to analyze event ${event.id}:`, error);
+        // 更新状态为 error
+        setEventAnalysisStates(prev => {
+          const newMap = new Map(prev);
+          const currentState = newMap.get(event.id);
+          if (currentState) {
+            newMap.set(event.id, {
+              ...currentState,
+              status: 'error',
+              error: error instanceof Error ? error.message : 'Analysis failed'
+            });
+          }
+          return newMap;
+        });
+
+        setBatchProgress(prev => ({
+          ...prev,
+          completed: prev.completed + 1
+        }));
+      }
+
+      // 添加短暂延迟避免请求过快
+      await new Promise(resolve => setTimeout(resolve, 500));
+    }
+
+    setBatchProgress(prev => ({
+      ...prev,
+      isRunning: false,
+      current: null
+    }));
+
+    if (!batchAnalysisRef.current.abort) {
+      showToast('Batch analysis completed!', 'success');
+    }
+  }, [events, eventAnalysisStates, batchProgress.isRunning, showToast]);
+
+  // 停止批量分析
+  const stopBatchAnalysis = useCallback(() => {
+    batchAnalysisRef.current.abort = true;
+    setBatchProgress(prev => ({
+      ...prev,
+      isRunning: false,
+      current: null
+    }));
+  }, []);
+
+  // 页面加载后自动开始批量分析
+  useEffect(() => {
+    if (events.length > 0 && !batchProgress.isRunning && batchProgress.completed === 0) {
+      // 延迟 2 秒后自动开始批量分析，给用户时间看到初始界面
+      const timer = setTimeout(() => {
+        startBatchAnalysis();
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [events.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // 初始加载
   useEffect(() => {
@@ -207,12 +467,18 @@ export default function Home() {
     return () => clearInterval(interval);
   }, [loadEvents]);
 
-  // 事件选择时触发分析
+  // 事件选择时触发分析（仅在用户主动点击时）
+  // 不再自动打开右侧抽屉，保持极简状态
   useEffect(() => {
     if (selectedEvent) {
-      triggerAnalysis(selectedEvent);
-      // 自动打开右侧抽屉显示分析结果
-      setRightDrawerOpen(true);
+      const state = eventAnalysisStates.get(selectedEvent.id);
+      // 如果该事件已有分析结果，直接使用
+      if (state?.status === 'completed' && state.result) {
+        setAnalysisResult(state.result);
+      } else if (state?.status !== 'analyzing') {
+        // 如果没有分析结果且不在分析中，则触发分析
+        triggerAnalysis(selectedEvent);
+      }
     }
   }, [selectedEvent?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -375,6 +641,43 @@ export default function Home() {
             </div>
 
             <div className="flex items-center gap-4">
+              {/* 批量分析进度 */}
+              {batchProgress.isRunning && (
+                <div className="flex items-center gap-3 px-3 py-1.5 bg-primary-cyan/10 border border-primary-cyan/20 rounded-lg">
+                  <Loader2 className="w-4 h-4 text-primary-cyan animate-spin" />
+                  <div className="text-xs">
+                    <span className="text-primary-cyan font-medium">
+                      {batchProgress.completed}/{batchProgress.total}
+                    </span>
+                    <span className="text-text-muted ml-1">analyzing...</span>
+                  </div>
+                  <button
+                    onClick={stopBatchAnalysis}
+                    className="p-1 hover:bg-primary-cyan/20 rounded transition-colors"
+                    title="Stop analysis"
+                  >
+                    <Pause className="w-3 h-3 text-primary-cyan" />
+                  </button>
+                </div>
+              )}
+
+              {/* 分析完成统计 */}
+              {!batchProgress.isRunning && batchProgress.completed > 0 && (
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-green-500/10 border border-green-500/20 rounded-lg">
+                  <CheckCircle className="w-4 h-4 text-green-400" />
+                  <span className="text-xs text-green-400">
+                    {batchProgress.completed}/{batchProgress.total} analyzed
+                  </span>
+                  <button
+                    onClick={startBatchAnalysis}
+                    className="p-1 hover:bg-green-500/20 rounded transition-colors ml-1"
+                    title="Re-analyze remaining"
+                  >
+                    <Play className="w-3 h-3 text-green-400" />
+                  </button>
+                </div>
+              )}
+
               <div className="flex items-center gap-4">
                 <div className="text-center">
                   <p className="text-[9px] text-text-muted uppercase tracking-wider">System</p>
@@ -440,15 +743,64 @@ export default function Home() {
         consensus={getConsensusPoints()}
         onDetailView={handleDetailView}
       >
+        {/* 分析模式切换 */}
+        {selectedEvent && (
+          <div className="mb-4 flex gap-2">
+            <button
+              onClick={() => setAnalysisMode('standard')}
+              className={`px-3 py-1.5 text-xs rounded-lg transition-colors ${
+                analysisMode === 'standard'
+                  ? 'bg-primary-cyan text-black'
+                  : 'bg-[#1E293B] text-text-muted hover:text-text-primary'
+              }`}
+            >
+              标准分析
+            </button>
+            <button
+              onClick={() => {
+                if (!reactionChainResult && selectedEvent) {
+                  triggerReactionChainAnalysis(selectedEvent);
+                }
+                setAnalysisMode('reaction_chain');
+                if (!rightDrawerOpen) setRightDrawerOpen(true);
+              }}
+              disabled={reactionChainLoading}
+              className={`px-3 py-1.5 text-xs rounded-lg transition-colors flex items-center gap-1 ${
+                analysisMode === 'reaction_chain'
+                  ? 'bg-[#9c27b0] text-white'
+                  : 'bg-[#1E293B] text-text-muted hover:text-text-primary'
+              }`}
+            >
+              {reactionChainLoading ? (
+                <>
+                  <div className="w-3 h-3 border border-white/30 border-t-white rounded-full animate-spin" />
+                  分析中...
+                </>
+              ) : (
+                '🔗 反应链'
+              )}
+            </button>
+          </div>
+        )}
+
         {/* 加载状态 */}
-        {analysisLoading && (
+        {(analysisLoading || reactionChainLoading) && (
           <div className="drawer-section">
             <div className="flex items-center justify-center py-8">
               <div className="flex flex-col items-center gap-3">
                 <div className="w-10 h-10 border-3 border-primary-cyan/20 border-t-primary-cyan rounded-full animate-spin" />
-                <p className="text-sm text-text-muted">Analyzing...</p>
+                <p className="text-sm text-text-muted">
+                  {reactionChainLoading ? 'Running reaction chain analysis...' : 'Analyzing...'}
+                </p>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* 反应链分析结果 */}
+        {!analysisLoading && !reactionChainLoading && analysisMode === 'reaction_chain' && reactionChainResult && (
+          <div className="max-h-[70vh] overflow-y-auto">
+            <ReactionChainView result={reactionChainResult as any} />
           </div>
         )}
       </RightDrawer>
@@ -468,6 +820,8 @@ export default function Home() {
         selectedEventId={selectedEvent?.id}
         onEventSelect={handleDrawerEventSelect}
         onClose={() => setBottomDrawerOpen(false)}
+        analysisStates={eventAnalysisStates}
+        batchProgress={batchProgress}
       />
 
       {/* 悬浮工具栏 */}
