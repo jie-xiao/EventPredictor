@@ -27,6 +27,9 @@ from app.api.routes.pattern import router as pattern_router
 # P1阶段新增：沙盘推演和报告生成路由
 from app.api.routes.sandbox import router as sandbox_router
 from app.api.routes.report import router as report_router
+# P2阶段新增：知识图谱和事件监控路由
+from app.api.routes.knowledge_graph import router as knowledge_graph_router
+from app.api.routes.event_monitor import router as event_monitor_router
 from app.core.config import config
 
 
@@ -132,6 +135,9 @@ app.include_router(pattern_router)
 # P1阶段新增：沙盘推演和报告生成路由
 app.include_router(sandbox_router)
 app.include_router(report_router)
+# P2阶段新增：知识图谱和事件监控路由
+app.include_router(knowledge_graph_router)
+app.include_router(event_monitor_router)
 
 
 # 导出app实例
