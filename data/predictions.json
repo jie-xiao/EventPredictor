@@ -1,0 +1,17 @@
+{
+  "pred-fa9cfc37": {
+    "id": "pred-fa9cfc37",
+    "event_id": "evt-9f6243fc",
+    "trend": "UP",
+    "confidence": 0.9,
+    "reasoning": "综合分析结果：\n\n1. **趋势判断**: 基于市场情绪(Strongly Positive)和影响范围(Global)，预计走势上涨\n\n2. **影响分析**: \n   - 影响范围: Global\n   - 持续时间: Medium-term (1-3 months)\n   - 关键因素: Interest Rates, Liquidity, Market Sentiment\n\n3. **推理依据**:\n   基于对事件的初步分析：\n\n1. **影响范围**: 该事件预计将对Global产生影响\n2. **持续时间**: 预计影响持续Medium-term (1-3 months)\n3. **市场情绪**: 当前市场情绪偏向Strongly Positive\n4. **重要性评分**: 5/5 (高)\n\n需要进一步结合实时市场数据和市场预测进行综合判断。\n\n4. **不确定性因素**:\n   - 预测基于当前可用信息\n   - 实际情况可能受突发事件影响\n   - 建议结合多个数据源进行验证\n",
+    "time_horizon": "Medium-term (1-3 months)",
+    "factors": [
+      "Interest Rates",
+      "Liquidity",
+      "Market Sentiment",
+      "Event Importance: 5/5",
+      "Sentiment: Strongly Positive"
+    ]
+  }
+}
