@@ -18,6 +18,11 @@ from app.api.routes import predict, events, health
 from app.api.routes.multi_agent import router as multi_agent_router
 from app.api.routes.debate import router as debate_router
 from app.api.routes.history import router as history_router
+from app.api.routes.reaction_chain import router as reaction_chain_router
+from app.api.routes.multi_agent_coordination import router as multi_agent_coordination_router
+# P0阶段新增：缓存和模式匹配路由
+from app.api.routes.cache import router as cache_router
+from app.api.routes.pattern import router as pattern_router
 from app.core.config import config
 
 
@@ -101,6 +106,11 @@ app.include_router(events.router)
 app.include_router(multi_agent_router)
 app.include_router(debate_router)
 app.include_router(history_router)
+app.include_router(reaction_chain_router)
+app.include_router(multi_agent_coordination_router)
+# P0阶段新增：缓存和模式匹配路由
+app.include_router(cache_router)
+app.include_router(pattern_router)
 
 
 @app.on_event("startup")

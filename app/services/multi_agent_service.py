@@ -1,4 +1,5 @@
 # 多Agent角色分析服务
+# P0阶段：集成历史模式匹配 + 响应缓存
 import asyncio
 from typing import List, Dict, Any, Optional
 import uuid
@@ -7,6 +8,8 @@ from pydantic import BaseModel
 
 from app.agents.roles import ROLES, AgentRole, RoleCategory
 from app.services.llm_service import llm_service, RoleAnalysisResponse, CrossAnalysisResponse
+from app.services.pattern_matcher_service import pattern_matcher
+from app.services.response_cache_service import response_cache
 
 
 class RoleAnalysisResult:
@@ -51,28 +54,57 @@ class RoleAnalysisResult:
 
 
 class MultiAgentAnalysisService:
-    """多Agent角色分析服务"""
+    """多Agent角色分析服务（P0阶段：集成缓存和模式匹配）"""
 
     def __init__(self):
         self.llm = llm_service
+        # P0阶段：缓存和模式匹配服务
+        self.cache = response_cache
+        self.pattern_matcher = pattern_matcher
 
     async def analyze_with_roles(
         self,
         event: Dict[str, Any],
         role_ids: List[str],
-        depth: str = "standard"
+        depth: str = "standard",
+        use_cache: bool = True,
+        find_similar: bool = True
     ) -> Dict[str, Any]:
         """
-        使用指定角色进行多Agent分析
+        使用指定角色进行多Agent分析（P0阶段：集成缓存和模式匹配）
 
         Args:
             event: 事件信息
             role_ids: 要分析的角色ID列表
             depth: 分析深度 (simple/standard/detailed)
+            use_cache: 是否使用缓存（默认True）
+            find_similar: 是否查找相似历史事件（默认True）
 
         Returns:
             包含各角色分析结果的字典
         """
+        # P0阶段：尝试从缓存获取
+        if use_cache:
+            cache_key_data = {
+                **event,
+                "role_ids": sorted(role_ids),
+                "depth": depth
+            }
+            cached_result = await self.cache.get(cache_key_data, "multi_agent")
+
+            if cached_result is not None:
+                # 缓存命中
+                cached_result["_cache_hit"] = True
+                return cached_result
+
+        # P0阶段：查找相似历史事件
+        similar_patterns = []
+        if find_similar:
+            similar_patterns = await self.pattern_matcher.find_similar_events(
+                event,
+                top_k=3,
+                min_similarity=0.4
+            )
         # 获取角色定义
         roles = [ROLES[rid] for rid in role_ids if rid in ROLES]
 
@@ -100,14 +132,39 @@ class MultiAgentAnalysisService:
         # 综合推演
         synthesis = await self._synthesize(event, valid_results, cross_analysis)
 
-        return {
+        # 构建结果
+        result = {
             "event": event,
             "role_analyses": [r.to_dict() for r in valid_results],
             "categorized": categorized,
             "cross_analysis": cross_analysis,
             "synthesis": synthesis,
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.utcnow().isoformat(),
+            "_cache_hit": False
         }
+
+        # P0阶段：添加相似模式信息
+        if similar_patterns:
+            result["similar_patterns"] = [
+                {
+                    "title": p.get("title"),
+                    "similarity": p.get("similarity_score"),
+                    "trend": p.get("prediction", {}).get("trend"),
+                    "confidence": p.get("prediction", {}).get("confidence")
+                }
+                for p in similar_patterns
+            ]
+
+        # P0阶段：缓存结果
+        if use_cache:
+            cache_key_data = {
+                **event,
+                "role_ids": sorted(role_ids),
+                "depth": depth
+            }
+            await self.cache.set(cache_key_data, result, "multi_agent")
+
+        return result
 
     async def _analyze_single_role_structured(
         self,
@@ -598,6 +655,124 @@ class MultiAgentAnalysisService:
             recommendations.append(f"利用共识: {consensus}")
 
         return recommendations[:3]
+
+    # ============ P0阶段新增方法：缓存和模式匹配管理 ============
+
+    async def get_cache_stats(self) -> Dict[str, Any]:
+        """获取缓存统计信息"""
+        return await self.cache.get_stats()
+
+    async def clear_cache(self, expired_only: bool = False) -> Dict[str, str]:
+        """清空缓存"""
+        await self.cache.clear(expired_only=expired_only)
+        return {"status": "success", "message": f"缓存已{'清除过期条目' if expired_only else '全部清空'}"}
+
+    async def get_pattern_stats(self) -> Dict[str, Any]:
+        """获取模式匹配统计信息"""
+        return await self.pattern_matcher.get_pattern_statistics()
+
+    async def find_similar_patterns(
+        self,
+        event: Dict[str, Any],
+        top_k: int = 5,
+        min_similarity: float = 0.3
+    ) -> List[Dict[str, Any]]:
+        """
+        查找相似的历史模式
+
+        Args:
+            event: 事件信息
+            top_k: 返回最相似的K个结果
+            min_similarity: 最小相似度阈值
+
+        Returns:
+            相似模式列表
+        """
+        return await self.pattern_matcher.find_similar_events(
+            event,
+            top_k=top_k,
+            min_similarity=min_similarity
+        )
+
+    async def analyze_with_pattern_reference(
+        self,
+        event: Dict[str, Any],
+        role_ids: List[str],
+        depth: str = "standard"
+    ) -> Dict[str, Any]:
+        """
+        带历史模式参考的分析
+
+        在分析时参考相似历史事件的预测结果，
+        提供更全面的上下文。
+
+        Args:
+            event: 事件信息
+            role_ids: 角色ID列表
+            depth: 分析深度
+
+        Returns:
+            包含分析和历史参考的结果
+        """
+        # 查找相似事件
+        similar_patterns = await self.pattern_matcher.find_similar_events(
+            event,
+            top_k=5,
+            min_similarity=0.3
+        )
+
+        # 执行标准分析
+        analysis_result = await self.analyze_with_roles(
+            event,
+            role_ids,
+            depth,
+            use_cache=True,
+            find_similar=True
+        )
+
+        # 如果有高相似度的历史事件，提供参考建议
+        historical_insights = []
+        if similar_patterns:
+            for pattern in similar_patterns[:3]:
+                pred = pattern.get("prediction", {})
+                if pred:
+                    historical_insights.append({
+                        "similar_event": pattern.get("title"),
+                        "similarity": pattern.get("similarity_score"),
+                        "historical_trend": pred.get("trend"),
+                        "historical_confidence": pred.get("confidence"),
+                        "insight": f"历史上相似事件趋势为{pred.get('trend')}，置信度{pred.get('confidence', 0)*100:.0f}%"
+                    })
+
+        analysis_result["historical_reference"] = {
+            "similar_patterns_count": len(similar_patterns),
+            "insights": historical_insights,
+            "recommendation": self._generate_historical_recommendation(historical_insights) if historical_insights else None
+        }
+
+        return analysis_result
+
+    def _generate_historical_recommendation(
+        self,
+        historical_insights: List[Dict[str, Any]]
+    ) -> Optional[str]:
+        """基于历史参考生成建议"""
+        if not historical_insights:
+            return None
+
+        # 统计历史趋势
+        trends = {}
+        for insight in historical_insights:
+            trend = insight.get("historical_trend", "N/A")
+            similarity = insight.get("similarity", 0)
+            # 加权统计
+            trends[trend] = trends.get(trend, 0) + similarity
+
+        if trends:
+            dominant_trend = max(trends, key=trends.get)
+            return f"基于{len(historical_insights)}个相似历史事件，主要趋势为{dominant_trend}"
+
+        return None
 
 
 # 全局服务实例
