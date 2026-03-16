@@ -355,5 +355,176 @@
       "Event Importance: 5/5",
       "Sentiment: Strongly Negative"
     ]
+  },
+  "pred-968ecb4c": {
+    "id": "pred-968ecb4c",
+    "event_id": "evt-282df6a8",
+    "trend": "UP",
+    "confidence": 0.9,
+    "reasoning": "综合分析结果：\n\n1. **趋势判断**: 基于市场情绪(Strongly Positive)和影响范围(Global)，预计走势上涨\n\n2. **影响分析**: \n   - 影响范围: Global\n   - 持续时间: Medium-term (1-3 months)\n   - 关键因素: Interest Rates, Liquidity, Market Sentiment\n\n3. **推理依据**:\n   基于对事件的初步分析：\n\n1. **影响范围**: 该事件预计将对Global产生影响\n2. **持续时间**: 预计影响持续Medium-term (1-3 months)\n3. **市场情绪**: 当前市场情绪偏向Strongly Positive\n4. **重要性评分**: 5/5 (高)\n\n需要进一步结合实时市场数据和市场预测进行综合判断。\n\n4. **不确定性因素**:\n   - 预测基于当前可用信息\n   - 实际情况可能受突发事件影响\n   - 建议结合多个数据源进行验证\n",
+    "time_horizon": "Medium-term (1-3 months)",
+    "factors": [
+      "Interest Rates",
+      "Liquidity",
+      "Market Sentiment",
+      "Event Importance: 5/5",
+      "Sentiment: Strongly Positive"
+    ]
+  },
+  "pred-587d9f6a": {
+    "id": "pred-587d9f6a",
+    "event_id": "evt-ec1e8850",
+    "trend": "SIDEWAYS",
+    "confidence": 0.5,
+    "reasoning": "综合分析结果：\n\n1. **趋势判断**: 基于市场情绪(Neutral)和影响范围(Unknown)，预计走势横盘\n\n2. **影响分析**: \n   - 影响范围: Unknown\n   - 持续时间: Unknown\n   - 关键因素: Event Importance: 3/5\n\n3. **推理依据**:\n   基于对事件的初步分析：\n\n1. **影响范围**: 该事件预计将对Unknown产生影响\n2. **持续时间**: 预计影响持续Unknown\n3. **市场情绪**: 当前市场情绪偏向Neutral\n4. **重要性评分**: 3/5 (中等)\n\n需要进一步结合实时市场数据和市场预测进行综合判断。\n\n4. **不确定性因素**:\n   - 预测基于当前可用信息\n   - 实际情况可能受突发事件影响\n   - 建议结合多个数据源进行验证\n",
+    "time_horizon": "Unknown",
+    "factors": [
+      "Event Importance: 3/5",
+      "Sentiment: Neutral"
+    ]
+  },
+  "pred-51782344": {
+    "id": "pred-51782344",
+    "event_id": "evt-52f9b28c",
+    "trend": "SIDEWAYS",
+    "confidence": 0.5,
+    "reasoning": "综合分析结果：\n\n1. **趋势判断**: 基于市场情绪(Neutral)和影响范围(Unknown)，预计走势横盘\n\n2. **影响分析**: \n   - 影响范围: Unknown\n   - 持续时间: Unknown\n   - 关键因素: Event Importance: 3/5\n\n3. **推理依据**:\n   基于对事件的初步分析：\n\n1. **影响范围**: 该事件预计将对Unknown产生影响\n2. **持续时间**: 预计影响持续Unknown\n3. **市场情绪**: 当前市场情绪偏向Neutral\n4. **重要性评分**: 3/5 (中等)\n\n需要进一步结合实时市场数据和市场预测进行综合判断。\n\n4. **不确定性因素**:\n   - 预测基于当前可用信息\n   - 实际情况可能受突发事件影响\n   - 建议结合多个数据源进行验证\n",
+    "time_horizon": "Unknown",
+    "factors": [
+      "Event Importance: 3/5",
+      "Sentiment: Neutral"
+    ]
+  },
+  "pred-c4541010": {
+    "id": "pred-c4541010",
+    "event_id": "evt-b3bbf031",
+    "trend": "UP",
+    "confidence": 0.85,
+    "reasoning": "综合分析结果：\n\n1. **趋势判断**: 基于市场情绪(Positive)和影响范围(Global)，预计走势上涨\n\n2. **影响分析**: \n   - 影响范围: Global\n   - 持续时间: Medium-term (1-3 months)\n   - 关键因素: Interest Rates, Liquidity, Market Sentiment\n\n3. **推理依据**:\n   基于对事件的初步分析：\n\n1. **影响范围**: 该事件预计将对Global产生影响\n2. **持续时间**: 预计影响持续Medium-term (1-3 months)\n3. **市场情绪**: 当前市场情绪偏向Positive\n4. **重要性评分**: 3/5 (中等)\n\n需要进一步结合实时市场数据和市场预测进行综合判断。\n\n4. **不确定性因素**:\n   - 预测基于当前可用信息\n   - 实际情况可能受突发事件影响\n   - 建议结合多个数据源进行验证\n",
+    "time_horizon": "Medium-term (1-3 months)",
+    "factors": [
+      "Interest Rates",
+      "Liquidity",
+      "Market Sentiment",
+      "Event Importance: 3/5",
+      "Sentiment: Positive"
+    ]
+  },
+  "pred-e605dc0f": {
+    "id": "pred-e605dc0f",
+    "event_id": "evt-63a77cd1",
+    "trend": "DOWN",
+    "confidence": 0.7999999999999999,
+    "reasoning": "综合分析结果：\n\n1. **趋势判断**: 基于市场情绪(Negative)和影响范围(Regional)，预计走势下跌\n\n2. **影响分析**: \n   - 影响范围: Regional\n   - 持续时间: Long-term (3-12 months)\n   - 关键因素: Political Stability, Trade Relations, Security\n\n3. **推理依据**:\n   基于对事件的初步分析：\n\n1. **影响范围**: 该事件预计将对Regional产生影响\n2. **持续时间**: 预计影响持续Long-term (3-12 months)\n3. **市场情绪**: 当前市场情绪偏向Negative\n4. **重要性评分**: 3/5 (中等)\n\n需要进一步结合实时市场数据和市场预测进行综合判断。\n\n4. **不确定性因素**:\n   - 预测基于当前可用信息\n   - 实际情况可能受突发事件影响\n   - 建议结合多个数据源进行验证\n",
+    "time_horizon": "Long-term (3-12 months)",
+    "factors": [
+      "Political Stability",
+      "Trade Relations",
+      "Security",
+      "Event Importance: 3/5",
+      "Sentiment: Negative"
+    ]
+  },
+  "pred-166b5a89": {
+    "id": "pred-166b5a89",
+    "event_id": "evt-f069b3a8",
+    "trend": "SIDEWAYS",
+    "confidence": 0.6,
+    "reasoning": "综合分析结果：\n\n1. **趋势判断**: 基于市场情绪(Neutral)和影响范围(Industry)，预计走势横盘\n\n2. **影响分析**: \n   - 影响范围: Industry\n   - 持续时间: Long-term (3-12 months)\n   - 关键因素: Innovation, Regulation, Adoption\n\n3. **推理依据**:\n   基于对事件的初步分析：\n\n1. **影响范围**: 该事件预计将对Industry产生影响\n2. **持续时间**: 预计影响持续Long-term (3-12 months)\n3. **市场情绪**: 当前市场情绪偏向Neutral\n4. **重要性评分**: 3/5 (中等)\n\n需要进一步结合实时市场数据和市场预测进行综合判断。\n\n4. **不确定性因素**:\n   - 预测基于当前可用信息\n   - 实际情况可能受突发事件影响\n   - 建议结合多个数据源进行验证\n",
+    "time_horizon": "Long-term (3-12 months)",
+    "factors": [
+      "Innovation",
+      "Regulation",
+      "Adoption",
+      "Event Importance: 3/5",
+      "Sentiment: Neutral"
+    ]
+  },
+  "pred-757894fc": {
+    "id": "pred-757894fc",
+    "event_id": "evt-eead635d",
+    "trend": "SIDEWAYS",
+    "confidence": 0.75,
+    "reasoning": "综合分析结果：\n\n1. **趋势判断**: 基于市场情绪(Neutral)和影响范围(Global)，预计走势横盘\n\n2. **影响分析**: \n   - 影响范围: Global\n   - 持续时间: Medium-term (1-3 months)\n   - 关键因素: GDP Growth, Employment, Inflation\n\n3. **推理依据**:\n   基于对事件的初步分析：\n\n1. **影响范围**: 该事件预计将对Global产生影响\n2. **持续时间**: 预计影响持续Medium-term (1-3 months)\n3. **市场情绪**: 当前市场情绪偏向Neutral\n4. **重要性评分**: 3/5 (中等)\n\n需要进一步结合实时市场数据和市场预测进行综合判断。\n\n4. **不确定性因素**:\n   - 预测基于当前可用信息\n   - 实际情况可能受突发事件影响\n   - 建议结合多个数据源进行验证\n",
+    "time_horizon": "Medium-term (1-3 months)",
+    "factors": [
+      "GDP Growth",
+      "Employment",
+      "Inflation",
+      "Event Importance: 3/5",
+      "Sentiment: Neutral"
+    ]
+  },
+  "pred-e8696039": {
+    "id": "pred-e8696039",
+    "event_id": "evt-8f80a56c",
+    "trend": "DOWN",
+    "confidence": 0.7999999999999999,
+    "reasoning": "综合分析结果：\n\n1. **趋势判断**: 基于市场情绪(Negative)和影响范围(Regional)，预计走势下跌\n\n2. **影响分析**: \n   - 影响范围: Regional\n   - 持续时间: Short-term (1-7 days)\n   - 关键因素: Supply Chain, Insurance, Human Impact\n\n3. **推理依据**:\n   基于对事件的初步分析：\n\n1. **影响范围**: 该事件预计将对Regional产生影响\n2. **持续时间**: 预计影响持续Short-term (1-7 days)\n3. **市场情绪**: 当前市场情绪偏向Negative\n4. **重要性评分**: 3/5 (中等)\n\n需要进一步结合实时市场数据和市场预测进行综合判断。\n\n4. **不确定性因素**:\n   - 预测基于当前可用信息\n   - 实际情况可能受突发事件影响\n   - 建议结合多个数据源进行验证\n",
+    "time_horizon": "Short-term (1-7 days)",
+    "factors": [
+      "Supply Chain",
+      "Insurance",
+      "Human Impact",
+      "Event Importance: 3/5",
+      "Sentiment: Negative"
+    ]
+  },
+  "pred-922d9e62": {
+    "id": "pred-922d9e62",
+    "event_id": "evt-e7e0e230",
+    "trend": "SIDEWAYS",
+    "confidence": 0.6,
+    "reasoning": "综合分析结果：\n\n1. **趋势判断**: 基于市场情绪(Neutral)和影响范围(Local)，预计走势横盘\n\n2. **影响分析**: \n   - 影响范围: Local\n   - 持续时间: Short-term (1-7 days)\n   - 关键因素: Public Opinion, Policy Changes, Social Stability\n\n3. **推理依据**:\n   基于对事件的初步分析：\n\n1. **影响范围**: 该事件预计将对Local产生影响\n2. **持续时间**: 预计影响持续Short-term (1-7 days)\n3. **市场情绪**: 当前市场情绪偏向Neutral\n4. **重要性评分**: 3/5 (中等)\n\n需要进一步结合实时市场数据和市场预测进行综合判断。\n\n4. **不确定性因素**:\n   - 预测基于当前可用信息\n   - 实际情况可能受突发事件影响\n   - 建议结合多个数据源进行验证\n",
+    "time_horizon": "Short-term (1-7 days)",
+    "factors": [
+      "Public Opinion",
+      "Policy Changes",
+      "Social Stability",
+      "Event Importance: 3/5",
+      "Sentiment: Neutral"
+    ]
+  },
+  "pred-9565073f": {
+    "id": "pred-9565073f",
+    "event_id": "evt-8c19ae27",
+    "trend": "SIDEWAYS",
+    "confidence": 0.5,
+    "reasoning": "综合分析结果：\n\n1. **趋势判断**: 基于市场情绪(Neutral)和影响范围(Unknown)，预计走势横盘\n\n2. **影响分析**: \n   - 影响范围: Unknown\n   - 持续时间: Unknown\n   - 关键因素: Event Importance: 3/5\n\n3. **推理依据**:\n   基于对事件的初步分析：\n\n1. **影响范围**: 该事件预计将对Unknown产生影响\n2. **持续时间**: 预计影响持续Unknown\n3. **市场情绪**: 当前市场情绪偏向Neutral\n4. **重要性评分**: 3/5 (中等)\n\n需要进一步结合实时市场数据和市场预测进行综合判断。\n\n4. **不确定性因素**:\n   - 预测基于当前可用信息\n   - 实际情况可能受突发事件影响\n   - 建议结合多个数据源进行验证\n",
+    "time_horizon": "Unknown",
+    "factors": [
+      "Event Importance: 3/5",
+      "Sentiment: Neutral"
+    ]
+  },
+  "pred-c4f7ad41": {
+    "id": "pred-c4f7ad41",
+    "event_id": "evt-ae9fca8d",
+    "trend": "UP",
+    "confidence": 0.85,
+    "reasoning": "综合分析结果：\n\n1. **趋势判断**: 基于市场情绪(Positive)和影响范围(Global)，预计走势上涨\n\n2. **影响分析**: \n   - 影响范围: Global\n   - 持续时间: Medium-term (1-3 months)\n   - 关键因素: Interest Rates, Liquidity, Market Sentiment\n\n3. **推理依据**:\n   基于对事件的初步分析：\n\n1. **影响范围**: 该事件预计将对Global产生影响\n2. **持续时间**: 预计影响持续Medium-term (1-3 months)\n3. **市场情绪**: 当前市场情绪偏向Positive\n4. **重要性评分**: 3/5 (中等)\n\n需要进一步结合实时市场数据和市场预测进行综合判断。\n\n4. **不确定性因素**:\n   - 预测基于当前可用信息\n   - 实际情况可能受突发事件影响\n   - 建议结合多个数据源进行验证\n",
+    "time_horizon": "Medium-term (1-3 months)",
+    "factors": [
+      "Interest Rates",
+      "Liquidity",
+      "Market Sentiment",
+      "Event Importance: 3/5",
+      "Sentiment: Positive"
+    ]
+  },
+  "pred-24a90ba8": {
+    "id": "pred-24a90ba8",
+    "event_id": "evt-a76ab35d",
+    "trend": "DOWN",
+    "confidence": 0.9,
+    "reasoning": "综合分析结果：\n\n1. **趋势判断**: 基于市场情绪(Strongly Negative)和影响范围(Global)，预计走势下跌\n\n2. **影响分析**: \n   - 影响范围: Global\n   - 持续时间: Long-term (3-12 months)\n   - 关键因素: Political Stability, Trade Relations, Security\n\n3. **推理依据**:\n   基于对事件的初步分析：\n\n1. **影响范围**: 该事件预计将对Global产生影响\n2. **持续时间**: 预计影响持续Long-term (3-12 months)\n3. **市场情绪**: 当前市场情绪偏向Strongly Negative\n4. **重要性评分**: 5/5 (高)\n\n需要进一步结合实时市场数据和市场预测进行综合判断。\n\n4. **不确定性因素**:\n   - 预测基于当前可用信息\n   - 实际情况可能受突发事件影响\n   - 建议结合多个数据源进行验证\n",
+    "time_horizon": "Long-term (3-12 months)",
+    "factors": [
+      "Political Stability",
+      "Trade Relations",
+      "Security",
+      "Event Importance: 5/5",
+      "Sentiment: Strongly Negative"
+    ]
   }
 }

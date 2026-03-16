@@ -1,8 +1,8 @@
 // 事件监控面板 - 世界一流UI设计
 import React, { useState, useEffect, useCallback } from 'react';
-import { 
-  Bell, AlertTriangle, CheckCircle, RefreshCw, Settings, Shield, 
-  Activity, Clock, Filter, X, Zap, Target, TrendingUp
+import {
+  Bell, AlertTriangle, CheckCircle, RefreshCw, Settings, Shield,
+  Activity, Clock, Filter, Zap, Target, TrendingUp
 } from 'lucide-react';
 
 // ============ 类型定义 ============

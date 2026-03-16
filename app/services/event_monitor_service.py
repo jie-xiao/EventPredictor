@@ -16,7 +16,7 @@ import uuid
 from typing import Dict, Any, List, Optional, Set
 from datetime import datetime, timedelta
 from pathlib import Path
-from dataclasses import dataclass, field, asdict
+from dataclasses import dataclass, field as dc_field, asdict
 from enum import Enum
 from collections import defaultdict
 
@@ -69,7 +69,7 @@ class AlertRule:
     # 高级：组合规则
     group_id: Optional[str] = None  # 规则组
     cooldown_minutes: int = 30      # 冷却时间（分钟）
-    created_at: str = field(default_factory=lambda: datetime.utcnow().isoformat() + "Z")
+    created_at: str = dc_field(default_factory=lambda: datetime.utcnow().isoformat() + "Z")
     last_triggered: Optional[str] = None
 
     def to_dict(self) -> Dict[str, Any]:
@@ -115,7 +115,7 @@ class Alert:
     severity: AlertSeverity
     event_data: Dict[str, Any]
     message: str
-    created_at: str = field(default_factory=lambda: datetime.utcnow().isoformat() + "Z")
+    created_at: str = dc_field(default_factory=lambda: datetime.utcnow().isoformat() + "Z")
     acknowledged: bool = False
 
     def to_dict(self) -> Dict[str, Any]:
@@ -143,8 +143,8 @@ class MonitoredEvent:
     country: str = ""
     timestamp: str = ""
     processed: bool = False
-    matched_rules: List[str] = field(default_factory=list)
-    created_at: str = field(default_factory=lambda: datetime.utcnow().isoformat() + "Z")
+    matched_rules: List[str] = dc_field(default_factory=list)
+    created_at: str = dc_field(default_factory=lambda: datetime.utcnow().isoformat() + "Z")
 
     def to_dict(self) -> Dict[str, Any]:
         return {

@@ -1,9 +1,9 @@
 // 知识图谱可视化组件 - 世界一流UI设计
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Network } from 'react-vis-network';
-import { 
-  AlertTriangle, Search, RefreshCw, ZoomIn, ZoomOut, Maximize2, 
-  Network as NetworkIcon, Settings, X
+import {
+  AlertTriangle, Search, RefreshCw, ZoomIn, ZoomOut, Maximize2,
+  Network as NetworkIcon, X
 } from 'lucide-react';
 
 // ============ 类型定义 ============
@@ -13,14 +13,6 @@ interface EntityNode {
   type: string;
   importance?: number;
   properties?: Record<string, any>;
-}
-
-interface RelationEdge {
-  id: string;
-  source: string;
-  target: string;
-  type: string;
-  weight?: number;
 }
 
 // ============ 世界一流UI配置 ============
@@ -141,9 +133,9 @@ const KnowledgeGraphView: React.FC = () => {
       // 节点转换
       const nodes = entities.map((e: any) => ({
         id: e.id,
-        label: e.name,
         title: `${e.name}\n类型: ${e.type}\n重要性: ${e.importance || 1}`,
         ...getNodeConfig(e.type, e.importance || 1),
+        label: e.name, // 确保 label 在最后，不被覆盖
       }));
 
       // 边转换
@@ -418,11 +410,11 @@ const KnowledgeGraphView: React.FC = () => {
               {selectedNode.importance !== undefined && (
                 <div className="flex items-center gap-1">
                   {Array.from({ length: 5 }).map((_, i) => (
-                    <span 
-                      key={i} 
+                    <span
+                      key={i}
                       className="text-xs"
-                      style={{ 
-                        color: i < Math.ceil(selectedNode.importance) ? '#FBBF24' : '#374151' 
+                      style={{
+                        color: i < Math.ceil(selectedNode.importance ?? 0) ? '#FBBF24' : '#374151'
                       }}
                     >
                       ★
