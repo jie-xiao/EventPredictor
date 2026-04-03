@@ -173,6 +173,10 @@ export default function Home() {
       }
       const data = await response.json();
       const fetchedEvents = data.events || [];
+      console.log('[Home] Fetched events:', fetchedEvents.length);
+      if (fetchedEvents.length > 0) {
+        console.log('[Home] Sample event location:', fetchedEvents[0]?.location);
+      }
       setEvents(fetchedEvents);
 
       // 初始化所有事件的分析状态为 pending

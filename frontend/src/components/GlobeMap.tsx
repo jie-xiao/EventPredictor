@@ -66,16 +66,34 @@ export default function GlobeMap({ events, selectedEvent, onEventClick }: GlobeM
     }
   }, [selectedEvent]);
 
+  // 过滤有有效位置数据的事件
   const markersData = events
-    .filter(event => event.location?.lat && event.location?.lon)
+    .filter(event => {
+      const hasLocation = event.location?.lat !== undefined &&
+                          event.location?.lon !== undefined &&
+                          !isNaN(event.location.lat) &&
+                          !isNaN(event.location.lon);
+      return hasLocation;
+    })
     .map(event => ({
       id: event.id,
-      lat: event.location!.lat!,
-      lng: event.location!.lon!,
+      lat: event.location!.lat,
+      lng: event.location!.lon,
       size: getMarkerSize(event.severity || 3),
       color: getMarkerColor(event.severity || 3),
       event: event
     }));
+
+  // 调试日志：帮助排查问题
+  useEffect(() => {
+    if (events.length > 0) {
+      console.log('[GlobeMap] Events received:', events.length);
+      console.log('[GlobeMap] Events with location:', markersData.length);
+      if (markersData.length === 0 && events.length > 0) {
+        console.log('[GlobeMap] Sample event location data:', events[0]?.location);
+      }
+    }
+  }, [events.length, markersData.length]);
 
   const handleMarkerClick = useCallback((marker: any) => {
     if (marker.event) {
@@ -209,7 +227,7 @@ export default function GlobeMap({ events, selectedEvent, onEventClick }: GlobeM
       </div>
 
       {/* No events message */}
-      {events.length === 0 && (
+      {markersData.length === 0 && (
         <div className="absolute inset-0 flex items-center justify-center rounded-lg z-20"
           style={{ backgroundColor: `${COLORS.bg.dark}80` }}>
           <div className="text-center">
@@ -217,7 +235,9 @@ export default function GlobeMap({ events, selectedEvent, onEventClick }: GlobeM
               style={{ backgroundColor: `${COLORS.primary.cyan}10` }}>
               <span className="text-3xl">🌍</span>
             </div>
-            <p style={{ color: COLORS.text.secondary }}>No events with location data</p>
+            <p style={{ color: COLORS.text.secondary }}>
+              {events.length === 0 ? 'No events available' : 'No events with location data'}
+            </p>
           </div>
         </div>
       )}
