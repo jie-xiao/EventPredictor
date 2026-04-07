@@ -57,6 +57,17 @@ frontend/dist/
 # Prediction history data
 data/prediction_history/
 
+# Runtime data files
+data/events.json
+data/predictions.json
+data/cache/
+data/event_monitor/
+data/knowledge_graph/
+
+# Test scripts
+scripts/
+test_predict.json
+
 # Screenshots and images (optional)
 *.png
 !docs/images/*.png
@@ -76,3 +87,6 @@ logs/
 # Temporary files
 *.tmp
 *.temp
+
+# Claude Code local settings
+.claude/settings.local.json
