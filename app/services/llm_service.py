@@ -307,6 +307,40 @@ class LLMService:
                 recommendation="持续关注事态发展"
             )
 
+        # P2.2 Advanced Analysis fallback models
+        try:
+            from app.services.advanced_analysis.models import (
+                MonteCarloScenarioLLMResponse,
+                BayesianNetworkLLMResponse,
+                CausalGraphLLMResponse,
+            )
+            if model == MonteCarloScenarioLLMResponse:
+                return model(
+                    variables=[],
+                    base_probability=0.5,
+                    trend_direction="SIDEWAYS",
+                    key_assumptions=["LLM不可用，使用默认假设"],
+                    confidence=0.3,
+                )
+            elif model == BayesianNetworkLLMResponse:
+                return model(
+                    nodes=[],
+                    edges=[],
+                    evidence_nodes=[],
+                    hypothesis_node="outcome",
+                    reasoning="LLM不可用，使用默认结构",
+                )
+            elif model == CausalGraphLLMResponse:
+                return model(
+                    factors=[],
+                    links=[],
+                    confounders=[],
+                    main_effect="",
+                    reasoning="LLM不可用，使用默认结构",
+                )
+        except ImportError:
+            pass
+
         # 通用默认值
         return model.model_construct({})
 

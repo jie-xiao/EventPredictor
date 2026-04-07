@@ -68,8 +68,33 @@ agents:
   predictor:
     prompt_template: "你是一个趋势预测专家..."
 
+# 数据库配置
+database:
+  path: "data/eventpredictor.db"  # 相对于项目根目录
+  echo: false  # SQL日志
+
+# 认证配置
+auth:
+  secret_key: "change-me-in-production-use-a-strong-random-key"
+  access_token_expire_minutes: 15
+  refresh_token_expire_days: 7
+  bcrypt_rounds: 12
+
 # 预测配置
 prediction:
   default_time_horizon: "Short-term (1-7 days)"
   min_confidence: 0.5
   cache_ttl: 3600  # 秒
+
+# 高级分析引擎配置 (P2.2)
+advanced_analysis:
+  monte_carlo:
+    default_simulations: 1000
+    max_simulations: 10000
+  bayesian:
+    max_nodes: 20
+  causal:
+    max_path_depth: 6
+  ensemble:
+    methods: ["monte_carlo", "bayesian", "causal"]
+    agreement_boost: 0.2

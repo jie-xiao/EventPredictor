@@ -55,6 +55,22 @@ class PredictionConfig(BaseSettings):
     cache_ttl: int = 3600
 
 
+class DatabaseConfig(BaseSettings):
+    """数据库配置"""
+    model_config = SettingsConfigDict(env_prefix="DB_")
+    path: str = "data/eventpredictor.db"
+    echo: bool = False
+
+
+class AuthConfig(BaseSettings):
+    """认证配置"""
+    model_config = SettingsConfigDict(env_prefix="AUTH_")
+    secret_key: str = "change-me-in-production-use-a-strong-random-key"
+    access_token_expire_minutes: int = 15
+    refresh_token_expire_days: int = 7
+    bcrypt_rounds: int = 12
+
+
 class Config(BaseSettings):
     """全局配置"""
     llm: LLMConfig = Field(default_factory=LLMConfig)
@@ -62,7 +78,9 @@ class Config(BaseSettings):
     api: APIConfig = Field(default_factory=APIConfig)
     agents: AgentConfig = Field(default_factory=AgentConfig)
     prediction: PredictionConfig = Field(default_factory=PredictionConfig)
-    
+    database: DatabaseConfig = Field(default_factory=DatabaseConfig)
+    auth: AuthConfig = Field(default_factory=AuthConfig)
+
     @classmethod
     def load_from_yaml(cls, config_path: Optional[str] = None) -> "Config":
         """从YAML文件加载配置"""
@@ -73,20 +91,22 @@ class Config(BaseSettings):
                 Path(__file__).parent.parent.parent,
                 "config.yaml"
             )
-        
+
         if not os.path.exists(config_path):
             return cls()
-        
+
         with open(config_path, "r", encoding="utf-8") as f:
             data = yaml.safe_load(f)
-        
+
         # 使用 model_construct 绕过 pydantic 验证，避免环境变量覆盖问题
         return cls.model_construct(
             llm=LLMConfig(**data.get("llm", {})),
             worldmonitor=WorldMonitorConfig(**data.get("worldmonitor", {})),
             api=APIConfig(**data.get("api", {})),
             agents=AgentConfig(**data.get("agents", {})),
-            prediction=PredictionConfig(**data.get("prediction", {}))
+            prediction=PredictionConfig(**data.get("prediction", {})),
+            database=DatabaseConfig(**data.get("database", {})),
+            auth=AuthConfig(**data.get("auth", {}))
         )
 
 

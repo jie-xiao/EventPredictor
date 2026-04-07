@@ -900,3 +900,229 @@ export async function getMonitorStats(): Promise<any> {
   const response = await fetch(`${API_BASE_URL}/api/v1/monitor/statistics`);
   return response.json();
 }
+
+// ============ P2.2: 高级分析引擎 API ============
+
+// 高级分析请求
+export interface AdvancedAnalysisRequest {
+  title: string;
+  description: string;
+  category?: string;
+  importance?: number;
+  timestamp?: string;
+  context?: Record<string, any>;
+}
+
+// 蒙特卡洛
+export interface ScenarioVariable {
+  name: string;
+  description: string;
+  distribution_type: string;
+  params: Record<string, number>;
+  impact_direction: number;
+  weight: number;
+}
+
+export interface MonteCarloResult {
+  n_simulations: number;
+  probability_distribution: Record<string, number>;
+  mean: number;
+  std: number;
+  CI_95: number[];
+  CI_80: number[];
+  sensitivity_analysis: Record<string, number>;
+  trend: string;
+  confidence: number;
+  simulation_details: Array<Record<string, any>>;
+  variables_used: ScenarioVariable[];
+  assumptions: string[];
+}
+
+export interface MonteCarloResponse {
+  event_title: string;
+  result: MonteCarloResult;
+  timestamp: string;
+}
+
+// 贝叶斯
+export interface BayesianNodeResult {
+  id: string;
+  name: string;
+  type: string;
+  prior: number;
+  posterior: number;
+}
+
+export interface BayesianResult {
+  nodes: BayesianNodeResult[];
+  edges: Array<{
+    source_id: string;
+    target_id: string;
+    conditional_probability: number;
+    relationship_type: string;
+  }>;
+  posteriors: Record<string, number>;
+  main_hypothesis_posterior: number;
+  evidence_impact: Record<string, number>;
+  influence_diagram: {
+    nodes: BayesianNodeResult[];
+    edges: Array<{ source: string; target: string; strength: number; type: string }>;
+  };
+  reasoning: string;
+}
+
+export interface BayesianResponse {
+  event_title: string;
+  result: BayesianResult;
+  timestamp: string;
+}
+
+// 因果
+export interface CausalFactorResult {
+  id: string;
+  name: string;
+  description: string;
+  factor_type: string;
+  direction: number;
+  strength: number;
+}
+
+export interface CausalLinkResult {
+  source_id: string;
+  target_id: string;
+  mechanism: string;
+  strength: number;
+  lag_time: string;
+}
+
+export interface CausalResult {
+  factors: CausalFactorResult[];
+  links: CausalLinkResult[];
+  direct_effects: Record<string, number>;
+  indirect_effects: Record<string, number>;
+  total_effects: Record<string, number>;
+  confounders: string[];
+  causal_paths: Array<{
+    from: string;
+    to: string;
+    path: Array<{ source: string; target: string; strength: number }>;
+    strength: number;
+  }>;
+  graph_data: {
+    nodes: Array<{
+      id: string;
+      name: string;
+      type: string;
+      direction: number;
+      strength: number;
+      is_confounder: boolean;
+    }>;
+    edges: Array<{
+      source: string;
+      target: string;
+      strength: number;
+      mechanism: string;
+      lag_time: string;
+    }>;
+  };
+}
+
+export interface CausalResponse {
+  event_title: string;
+  result: CausalResult;
+  timestamp: string;
+}
+
+// 集成
+export interface MethodResult {
+  method_name: string;
+  trend: string;
+  confidence: number;
+  key_findings: string[];
+  weight: number;
+}
+
+export interface EnsembleResult {
+  methods: MethodResult[];
+  unified_trend: string;
+  unified_confidence: number;
+  CI: number[];
+  agreement_score: number;
+  weighted_probabilities: Record<string, number>;
+  method_weights: Record<string, number>;
+  uncertainty_calibration: {
+    cross_method_std: number;
+    trend_entropy: number;
+    n_methods: number;
+    agreement_ratio: number;
+  };
+  recommendation: string;
+  detailed_results: Record<string, any>;
+}
+
+export interface EnsembleResponse {
+  event_title: string;
+  result: EnsembleResult;
+  timestamp: string;
+}
+
+// 方法信息
+export interface AnalysisMethodInfo {
+  id: string;
+  name: string;
+  description: string;
+  endpoint: string;
+}
+
+// API 函数
+export async function runMonteCarlo(
+  request: AdvancedAnalysisRequest,
+  nSimulations = 1000
+): Promise<MonteCarloResponse> {
+  const response = await fetch(
+    `${API_BASE_URL}/api/v1/analysis/advanced/monte-carlo?n_simulations=${nSimulations}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(request),
+    }
+  );
+  if (!response.ok) throw new Error('Monte Carlo analysis failed');
+  return response.json();
+}
+
+export async function runBayesian(request: AdvancedAnalysisRequest): Promise<BayesianResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/analysis/advanced/bayesian`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(request),
+  });
+  if (!response.ok) throw new Error('Bayesian analysis failed');
+  return response.json();
+}
+
+export async function runCausal(request: AdvancedAnalysisRequest): Promise<CausalResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/analysis/advanced/causal`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(request),
+  });
+  if (!response.ok) throw new Error('Causal analysis failed');
+  return response.json();
+}
+
+export async function runEnsemble(request: AdvancedAnalysisRequest): Promise<EnsembleResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/analysis/advanced/ensemble`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(request),
+  });
+  if (!response.ok) throw new Error('Ensemble analysis failed');
+  return response.json();
+}
+
+export async function getAdvancedMethods(): Promise<{ methods: AnalysisMethodInfo[] }> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/analysis/advanced/methods`);
+  if (!response.ok) throw new Error('Failed to fetch methods');
+  return response.json();
+}

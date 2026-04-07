@@ -4,6 +4,8 @@ import Home from './pages/Home';
 import AnalysisResult from './pages/AnalysisResult';
 import KnowledgeGraphView from './components/analysis/KnowledgeGraphView';
 import MonitorPanel from './components/analysis/MonitorPanel';
+import { AuthProvider } from './contexts/AuthContext';
+import LoginModal from './components/LoginModal';
 import './index.css';
 
 function NotFound() {
@@ -29,22 +31,25 @@ function NotFound() {
 
 function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        {/* 主页 - 全屏地球+抽屉系统 */}
-        <Route path="/" element={<Home />} />
-        <Route path="/analysis" element={<AnalysisResult />} />
-        {/* P2: 知识图谱 */}
-        <Route path="/knowledge-graph" element={<KnowledgeGraphView />} />
-        {/* P2: 事件监控 */}
-        <Route path="/monitor" element={<MonitorPanel />} />
-        {/* Redirect old routes */}
-        <Route path="/dashboard" element={<Navigate to="/" replace />} />
-        <Route path="/drawers" element={<Navigate to="/" replace />} />
-        {/* 404 - Not Found */}
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </BrowserRouter>
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          {/* 主页 - 全屏地球+抽屉系统 */}
+          <Route path="/" element={<Home />} />
+          <Route path="/analysis" element={<AnalysisResult />} />
+          {/* P2: 知识图谱 */}
+          <Route path="/knowledge-graph" element={<KnowledgeGraphView />} />
+          {/* P2: 事件监控 */}
+          <Route path="/monitor" element={<MonitorPanel />} />
+          {/* Redirect old routes */}
+          <Route path="/dashboard" element={<Navigate to="/" replace />} />
+          <Route path="/drawers" element={<Navigate to="/" replace />} />
+          {/* 404 - Not Found */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+        <LoginModal />
+      </BrowserRouter>
+    </AuthProvider>
   );
 }
 

@@ -10,6 +10,7 @@ import CrossAnalysis from '../components/analysis/CrossAnalysis';
 import TimelineView from '../components/analysis/TimelineView';
 import SentimentRadar from '../components/analysis/SentimentRadar';
 import ConflictHeatmap from '../components/analysis/ConflictHeatmap';
+import AdvancedAnalysisPanel from '../components/advanced/AdvancedAnalysisPanel';
 
 // Avoid unused variable warnings
 void Share2;
@@ -236,6 +237,24 @@ export default function AnalysisResultPage() {
               </div>
             </div>
           </section>
+
+          {/* Advanced Quantitative Analysis - P2.2 */}
+          {event && (
+            <section>
+              <div className="flex items-center gap-3 mb-4">
+                <h2 className="text-lg font-semibold" style={{ color: COLORS.text.primary }}>
+                  量化分析引擎
+                </h2>
+                <span
+                  className="px-2 py-0.5 rounded text-xs"
+                  style={{ backgroundColor: `${COLORS.primary.blue}15`, color: COLORS.primary.blue }}
+                >
+                  Advanced
+                </span>
+              </div>
+              <AdvancedAnalysisPanel event={event} />
+            </section>
+          )}
         </div>
       </main>
 

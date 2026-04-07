@@ -8,7 +8,10 @@ import {
   Sun,
   Settings,
   RefreshCw,
+  LogIn,
+  LogOut,
 } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 import '../styles/drawer-toolbar.css';
 
 export interface FloatingToolbarProps {
@@ -47,6 +50,7 @@ export default function FloatingToolbar({
 }: FloatingToolbarProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(true);
+  const { isAuthenticated, user, setShowLoginModal, logout } = useAuth();
 
   // 键盘快捷键
   useEffect(() => {
@@ -144,6 +148,12 @@ export default function FloatingToolbar({
       shortcut: 'F5',
       onClick: onRefresh,
       loading: isRefreshing,
+    },
+    {
+      id: 'auth',
+      icon: isAuthenticated ? <LogOut /> : <LogIn />,
+      tooltip: isAuthenticated ? `Logout (${user?.username})` : 'Login / Register',
+      onClick: isAuthenticated ? logout : () => setShowLoginModal(true),
     },
   ];
 
