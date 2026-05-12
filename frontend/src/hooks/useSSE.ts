@@ -96,10 +96,5 @@ export function useSSE(_token?: string | null): SSEReturn {
     };
   }, [connect]);
 
-  // 如果有 token，SSE 不支持自定义 header，
-  // EventSource 的认证通常通过 query param 或 cookie
-  // 这里不做 token 注入，服务端从 header 读取（SSE 连接建立时无法设置 header）
-  // TODO: 可以改用 query param 方式传 token
-
   return { events, connected, lastEvent, reconnectCount };
 }
