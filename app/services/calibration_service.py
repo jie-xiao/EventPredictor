@@ -2,8 +2,6 @@
 """Calibration service: Platt scaling and calibration metrics."""
 import json
 from typing import Dict, Any, List, Optional
-from sklearn.linear_model import LogisticRegression
-import numpy as np
 
 
 class CalibrationService:
@@ -16,6 +14,13 @@ class CalibrationService:
         """Apply Platt scaling to calibrate confidence scores."""
         if len(scores) < 3:
             return scores
+
+        # Lazy imports: sklearn/numpy are optional (only needed for calibration)
+        try:
+            import numpy as np
+            from sklearn.linear_model import LogisticRegression
+        except ImportError:
+            return scores  # sklearn not installed, skip calibration
 
         X = np.array([[s["confidence"]] for s in scores])
         y = np.array([1 if s["correct"] else 0 for s in scores])
