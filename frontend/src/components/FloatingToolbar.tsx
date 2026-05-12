@@ -12,6 +12,7 @@ import {
   LogOut,
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import NotificationCenter from './NotificationCenter';
 import '../styles/drawer-toolbar.css';
 
 export interface FloatingToolbarProps {
@@ -171,6 +172,9 @@ export default function FloatingToolbar({
       </button>
 
       {/* 功能按钮 */}
+      {/* 通知中心 - 始终可见 */}
+      <NotificationCenter />
+
       {buttons.map((btn) => (
         <button
           key={btn.id}
