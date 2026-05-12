@@ -71,6 +71,37 @@ class AuthConfig(BaseSettings):
     bcrypt_rounds: int = 12
 
 
+class RealtimeConfig(BaseSettings):
+    """实时数据配置"""
+    model_config = SettingsConfigDict(env_prefix="REALTIME_")
+    news_fetcher_enabled: bool = True
+    rss_interval: int = 300
+    worldmonitor_interval: int = 600
+    max_seen_events: int = 10000
+    sse_heartbeat: int = 30
+    sse_max_connections: int = 50
+
+
+class BacktestConfig(BaseSettings):
+    """回测配置"""
+    enabled: bool = True
+    historical_data_path: str = "data/historical_events.json"
+    auto_resolve_interval: int = 3600
+
+
+class OptionalSourcesConfig(BaseSettings):
+    """可选数据源配置"""
+    class GdeltConfig(BaseSettings):
+        enabled: bool = False
+        timeout: int = 30
+    class AcledConfig(BaseSettings):
+        enabled: bool = False
+        api_key: Optional[str] = None
+        timeout: int = 30
+    gdelt: GdeltConfig = Field(default_factory=GdeltConfig)
+    acled: AcledConfig = Field(default_factory=AcledConfig)
+
+
 class Config(BaseSettings):
     """全局配置"""
     llm: LLMConfig = Field(default_factory=LLMConfig)
@@ -80,6 +111,9 @@ class Config(BaseSettings):
     prediction: PredictionConfig = Field(default_factory=PredictionConfig)
     database: DatabaseConfig = Field(default_factory=DatabaseConfig)
     auth: AuthConfig = Field(default_factory=AuthConfig)
+    realtime: RealtimeConfig = Field(default_factory=RealtimeConfig)
+    backtest: BacktestConfig = Field(default_factory=BacktestConfig)
+    optional_sources: OptionalSourcesConfig = Field(default_factory=OptionalSourcesConfig)
 
     @classmethod
     def load_from_yaml(cls, config_path: Optional[str] = None) -> "Config":
@@ -98,6 +132,19 @@ class Config(BaseSettings):
         with open(config_path, "r", encoding="utf-8") as f:
             data = yaml.safe_load(f)
 
+        # 解析 realtime 配置节
+        rt_data = data.get("realtime", {})
+        nf_data = rt_data.get("news_fetcher", {})
+        sse_data = rt_data.get("sse", {})
+
+        # 解析 backtest 配置
+        bt_data = data.get("backtest", {})
+
+        # 解析 optional_sources 配置
+        os_data = data.get("optional_sources", {})
+        gdelt_data = os_data.get("gdelt", {})
+        acled_data = os_data.get("acled", {})
+
         # 使用 model_construct 绕过 pydantic 验证，避免环境变量覆盖问题
         return cls.model_construct(
             llm=LLMConfig(**data.get("llm", {})),
@@ -106,7 +153,31 @@ class Config(BaseSettings):
             agents=AgentConfig(**data.get("agents", {})),
             prediction=PredictionConfig(**data.get("prediction", {})),
             database=DatabaseConfig(**data.get("database", {})),
-            auth=AuthConfig(**data.get("auth", {}))
+            auth=AuthConfig(**data.get("auth", {})),
+            realtime=RealtimeConfig(
+                news_fetcher_enabled=nf_data.get("enabled", True),
+                rss_interval=nf_data.get("rss_interval", 300),
+                worldmonitor_interval=nf_data.get("worldmonitor_interval", 600),
+                max_seen_events=nf_data.get("max_seen_events", 10000),
+                sse_heartbeat=sse_data.get("heartbeat_interval", 30),
+                sse_max_connections=sse_data.get("max_connections", 50),
+            ),
+            backtest=BacktestConfig(
+                enabled=bt_data.get("enabled", True),
+                historical_data_path=bt_data.get("historical_data_path", "data/historical_events.json"),
+                auto_resolve_interval=bt_data.get("auto_resolve_interval", 3600),
+            ),
+            optional_sources=OptionalSourcesConfig(
+                gdelt=OptionalSourcesConfig.GdeltConfig(
+                    enabled=gdelt_data.get("enabled", False),
+                    timeout=gdelt_data.get("timeout", 30),
+                ),
+                acled=OptionalSourcesConfig.AcledConfig(
+                    enabled=acled_data.get("enabled", False),
+                    api_key=acled_data.get("api_key"),
+                    timeout=acled_data.get("timeout", 30),
+                ),
+            )
         )
 
 

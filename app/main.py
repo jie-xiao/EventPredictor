@@ -28,6 +28,10 @@ from app.api.routes.event_monitor import router as event_monitor_router
 from app.api.routes.auth import router as auth_router
 from app.api.routes.users import router as users_router
 from app.api.routes.advanced_analysis import router as advanced_analysis_router
+from app.api.routes.sse import router as sse_router
+from app.api.routes.notifications import router as notifications_router
+from app.api.routes.backtest import router as backtest_router
+from app.api.routes.calibration import router as calibration_router
 from app.core.config import config
 
 
@@ -88,9 +92,38 @@ async def lifespan(app: FastAPI):
         print(f"Database initialization warning: {e}")
         print("Continuing with file-based storage fallback")
 
+    # Start background news fetcher
+    try:
+        from app.services.news_fetcher_service import news_fetcher_service
+        await news_fetcher_service.start()
+        print("NewsFetcher service started")
+    except Exception as e:
+        print(f"NewsFetcher service warning: {e}")
+
+    # Start outcome tracker
+    try:
+        from app.services.outcome_tracker import outcome_tracker
+        await outcome_tracker.start()
+        print("OutcomeTracker service started")
+    except Exception as e:
+        print(f"OutcomeTracker service warning: {e}")
+
     yield
 
+    # Shutdown news fetcher
+    try:
+        from app.services.news_fetcher_service import news_fetcher_service
+        await news_fetcher_service.stop()
+    except Exception:
+        pass
+
     # Shutdown
+    # Shutdown outcome tracker
+    try:
+        from app.services.outcome_tracker import outcome_tracker
+        await outcome_tracker.stop()
+    except Exception:
+        pass
     try:
         from app.db.database import cleanup_db
         await cleanup_db()
@@ -140,6 +173,10 @@ app.include_router(event_monitor_router)
 app.include_router(auth_router)
 app.include_router(users_router)
 app.include_router(advanced_analysis_router)
+app.include_router(sse_router)
+app.include_router(notifications_router)
+app.include_router(backtest_router)
+app.include_router(calibration_router)
 
 
 # 导出app实例

@@ -86,6 +86,17 @@ prediction:
   min_confidence: 0.5
   cache_ttl: 3600  # 秒
 
+# 实时数据配置 (P2.3)
+realtime:
+  news_fetcher:
+    enabled: true
+    rss_interval: 300        # RSS抓取间隔（秒）
+    worldmonitor_interval: 600  # WorldMonitor抓取间隔（秒）
+    max_seen_events: 10000   # 去重集合上限
+  sse:
+    heartbeat_interval: 30   # SSE心跳间隔（秒）
+    max_connections: 50      # SSE最大连接数
+
 # 高级分析引擎配置 (P2.2)
 advanced_analysis:
   monte_carlo:
@@ -98,3 +109,19 @@ advanced_analysis:
   ensemble:
     methods: ["monte_carlo", "bayesian", "causal"]
     agreement_boost: 0.2
+
+# 回测配置 (P2.4)
+backtest:
+  enabled: true
+  historical_data_path: "data/historical_events.json"
+  auto_resolve_interval: 3600  # 1 hour
+
+# 可选数据源
+optional_sources:
+  gdelt:
+    enabled: false
+    timeout: 30
+  acled:
+    enabled: false
+    api_key: null
+    timeout: 30
