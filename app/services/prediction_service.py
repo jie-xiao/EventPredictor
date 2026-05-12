@@ -142,6 +142,18 @@ class PredictionService:
         # 生成响应
         response = PredictResponse.from_prediction(prediction, analysis)
 
+        # P2.4: Save prediction record for feedback loop
+        try:
+            from app.services.backtest_service import backtest_service
+            await backtest_service.save_prediction_record(
+                event_id=event.id,
+                event_title=event.title,
+                trend=prediction.trend.value if hasattr(prediction.trend, 'value') else str(prediction.trend),
+                confidence=prediction.confidence,
+            )
+        except Exception:
+            pass  # Non-critical
+
         # P0阶段：如果有相似事件，添加到响应中
         if similar_events:
             response.related_events = [
