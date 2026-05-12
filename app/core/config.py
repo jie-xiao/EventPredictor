@@ -74,6 +74,9 @@ class AuthConfig(BaseSettings):
 class RealtimeConfig(BaseSettings):
     """实时数据配置"""
     model_config = SettingsConfigDict(env_prefix="REALTIME_")
+    # NOTE: Attribute names differ from YAML keys intentionally.
+    # YAML key `realtime.news_fetcher.enabled` is mapped manually
+    # in load_from_yaml() to this attribute. See that method for details.
     news_fetcher_enabled: bool = True
     rss_interval: int = 300
     worldmonitor_interval: int = 600

@@ -77,10 +77,22 @@ class DataService:
                 try:
                     with open(path, "r", encoding="utf-8") as f:
                         data = json.load(f)
-                        self._events = data.get("events", [])
-                        self._last_refresh = datetime.now()
-                        print(f"[Fallback] Loaded {len(self._events)} preset events from {path}")
-                        return
+                    # 支持两种格式: {"events": [...]} 或 {"evt-id": {...}, ...}
+                    if isinstance(data, dict):
+                        if "events" in data and isinstance(data["events"], list):
+                            self._events = data["events"]
+                        else:
+                            # 扁平字典格式，提取所有值作为事件列表
+                            # Filter: only keep dict values that look like events (have a title)
+                            self._events = [v for v in data.values() if isinstance(v, dict) and "title" in v]
+                    elif isinstance(data, list):
+                        self._events = data
+                    else:
+                        self._events = []
+
+                    self._last_refresh = datetime.now()
+                    print(f"[Fallback] Loaded {len(self._events)} preset events from {path}")
+                    return
                 except Exception as e:
                     print(f"Failed to load {path}: {e}")
                     continue
