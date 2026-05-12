@@ -11,8 +11,10 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Globe, RefreshCw, X, AlertCircle, CheckCircle, Loader2, Play, Pause } from 'lucide-react';
 import { api, WorldMonitorEvent, AnalysisResult, DebateResult, API_BASE_URL, analyzeReactionChain, ReactionChainResult } from '../services/api';
+import { fetchCalibrationStatus, CalibrationStatus } from '../services/api';
 import GlobeMap from '../components/GlobeMap';
 import ReactionChainView from '../components/analysis/ReactionChainView';
+import { useSSE } from '../hooks/useSSE';
 
 // 抽屉和工具栏组件
 import FloatingToolbar from '../components/FloatingToolbar';
@@ -109,6 +111,9 @@ const generateMockRoles = (): Role[] => [
 export default function Home() {
   const navigate = useNavigate();
 
+  // SSE 实时连接
+  const { connected: sseConnected, lastEvent: sseLastEvent } = useSSE();
+
   // 事件数据
   const [events, setEvents] = useState<WorldMonitorEvent[]>([]);
   const [selectedEvent, setSelectedEvent] = useState<WorldMonitorEvent | null>(null);
@@ -149,6 +154,9 @@ export default function Home() {
     isRunning: false
   });
 
+  // 校准状态
+  const [calibrationStatus, setCalibrationStatus] = useState<CalibrationStatus | null>(null);
+
   // 批量分析控制
   const batchAnalysisRef = useRef<{ abort: boolean }>({ abort: false });
 
@@ -160,6 +168,21 @@ export default function Home() {
   useEffect(() => {
     const timer = setInterval(() => setTimeNow(new Date()), 1000);
     return () => clearInterval(timer);
+  }, []);
+
+  // 获取校准状态
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const stats = await fetchCalibrationStatus();
+        setCalibrationStatus(stats);
+      } catch {
+        // Silent - calibration may not have data yet
+      }
+    };
+    fetchStats();
+    const interval = setInterval(fetchStats, 5 * 60 * 1000); // every 5 min
+    return () => clearInterval(interval);
   }, []);
 
   // 加载事件
@@ -471,6 +494,20 @@ export default function Home() {
     return () => clearInterval(interval);
   }, [loadEvents]);
 
+  // SSE 实时事件推送处理
+  useEffect(() => {
+    if (!sseLastEvent) return;
+    if (sseLastEvent.type === 'new_event' && sseLastEvent.data) {
+      const ev = sseLastEvent.data as WorldMonitorEvent;
+      // 插入到列表顶部（去重）
+      setEvents(prev => {
+        if (prev.some(e => e.id === ev.id)) return prev;
+        return [ev, ...prev];
+      });
+      showToast(`New event: ${ev.title?.slice(0, 50) || 'Untitled'}`, 'info');
+    }
+  }, [sseLastEvent]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // 事件选择时触发分析（仅在用户主动点击时）
   // 不再自动打开右侧抽屉，保持极简状态
   useEffect(() => {
@@ -683,6 +720,11 @@ export default function Home() {
               )}
 
               <div className="flex items-center gap-4">
+                {/* SSE 连接状态 */}
+                <div className="flex items-center gap-1.5" title={sseConnected ? 'Live feed connected' : 'Live feed disconnected'}>
+                  <div className={`w-2 h-2 rounded-full ${sseConnected ? 'bg-[#10B981] animate-pulse' : 'bg-red-500'}`} />
+                  <span className="text-[9px] text-text-muted uppercase tracking-wider">Live</span>
+                </div>
                 <div className="text-center">
                   <p className="text-[9px] text-text-muted uppercase tracking-wider">System</p>
                   <p className="text-xs font-mono text-primary-cyan">
@@ -695,6 +737,31 @@ export default function Home() {
                     {lastUpdate.toLocaleTimeString('zh-CN', { hour12: false })}
                   </p>
                 </div>
+
+                {/* Calibrated status bar - 4 key numbers */}
+                {calibrationStatus && calibrationStatus.total_predictions > 0 && (
+                  <>
+                    <div className="h-6 w-px bg-[#1E293B]" />
+                    <div className="text-center">
+                      <p className="text-sm font-mono text-text-primary">{calibrationStatus.total_predictions}</p>
+                      <p className="text-[9px] text-text-muted uppercase tracking-wider">追踪中</p>
+                    </div>
+                    <div className="h-6 w-px bg-[#1E293B]" />
+                    <div className="text-center">
+                      <p className="text-sm font-mono" style={{ color: calibrationStatus.directional_accuracy >= 0.7 ? '#22C55E' : '#F59E0B' }}>
+                        {Math.round(calibrationStatus.directional_accuracy * 100)}%
+                      </p>
+                      <p className="text-[9px] text-text-muted uppercase tracking-wider">30日准确率</p>
+                    </div>
+                    <div className="h-6 w-px bg-[#1E293B]" />
+                    <div className="text-center">
+                      <p className="text-sm font-mono" style={{ color: calibrationStatus.calibration_rating === '优秀' || calibrationStatus.calibration_rating === '良好' ? '#22C55E' : '#F59E0B' }}>
+                        {calibrationStatus.calibration_rating}
+                      </p>
+                      <p className="text-[9px] text-text-muted uppercase tracking-wider">校准</p>
+                    </div>
+                  </>
+                )}
               </div>
 
               <button

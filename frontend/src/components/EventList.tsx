@@ -1,5 +1,5 @@
 import { useRef, useEffect } from 'react';
-import { Clock, MapPin, Zap, ChevronRight, Filter } from 'lucide-react';
+import { Clock, MapPin, Zap, ChevronRight, Filter, TrendingUp, TrendingDown } from 'lucide-react';
 import { WorldMonitorEvent } from '../services/api';
 
 interface EventListProps {
@@ -40,6 +40,22 @@ const getSeverityColor = (severity: number): string => {
   if (severity >= 4) return COLORS.status.danger;
   if (severity >= 3) return COLORS.status.warning;
   return COLORS.status.success;
+};
+
+const getTrendColor = (trend: string): string => {
+  switch (trend) {
+    case 'UP': return '#22C55E';
+    case 'DOWN': return '#EF4444';
+    case 'SIDEWAYS': return '#F59E0B';
+    default: return '#94A3B8';
+  }
+};
+
+const TREND_CONFIG: Record<string, { color: string; bg: string; icon: React.ReactNode; label: string }> = {
+  UP: { color: '#22C55E', bg: '#22C55E15', icon: <TrendingUp className="w-3 h-3" />, label: '看涨' },
+  DOWN: { color: '#EF4444', bg: '#EF444415', icon: <TrendingDown className="w-3 h-3" />, label: '看跌' },
+  SIDEWAYS: { color: '#F59E0B', bg: '#F59E0B15', icon: <span>→</span>, label: '震荡' },
+  UNCERTAIN: { color: '#94A3B8', bg: '#94A3B815', icon: <span>?</span>, label: '不确定' },
 };
 
 const formatTime = (timestamp: string): string => {
@@ -226,6 +242,39 @@ export default function EventList({ events, selectedEvent, onEventClick, loading
                       style={{ color: COLORS.text.primary }}>
                       {event.title}
                     </h4>
+
+                    {/* Prediction inline */}
+                    {event.prediction && (
+                      <div className="flex items-center gap-2 mb-2">
+                        <div
+                          className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold"
+                          style={{
+                            backgroundColor: TREND_CONFIG[event.prediction.trend || 'UNCERTAIN']?.bg || '#94A3B815',
+                            color: TREND_CONFIG[event.prediction.trend || 'UNCERTAIN']?.color || '#94A3B8',
+                          }}
+                        >
+                          {TREND_CONFIG[event.prediction.trend || 'UNCERTAIN']?.icon}
+                          {TREND_CONFIG[event.prediction.trend || 'UNCERTAIN']?.label}
+                        </div>
+                        {/* Confidence ring */}
+                        <div className="relative w-6 h-6 flex-shrink-0">
+                          <svg className="w-6 h-6 -rotate-90" viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="10" fill="none" stroke="#1E293B" strokeWidth="3" />
+                            <circle
+                              cx="12" cy="12" r="10" fill="none"
+                              stroke={getTrendColor(event.prediction.trend)}
+                              strokeWidth="3"
+                              strokeLinecap="round"
+                              strokeDasharray={`${(event.prediction.confidence || 0.5) * 63} 63`}
+                            />
+                          </svg>
+                          <span className="absolute inset-0 flex items-center justify-center text-[7px] font-bold"
+                            style={{ color: COLORS.text.primary }}>
+                            {Math.round((event.prediction.confidence || 0.5) * 100)}
+                          </span>
+                        </div>
+                      </div>
+                    )}
 
                     {/* Severity Bar */}
                     <div className="mb-2">

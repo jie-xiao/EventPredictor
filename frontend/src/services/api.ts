@@ -20,6 +20,11 @@ export interface WorldMonitorEvent {
   source_label?: string;  // 中文来源名称
   entities?: string[];
   sentiment?: string;
+  prediction?: {
+    trend: string;
+    confidence: number;
+    summary?: string;
+  };
 }
 
 // 角色类型
@@ -1125,4 +1130,55 @@ export async function getAdvancedMethods(): Promise<{ methods: AnalysisMethodInf
   const response = await fetch(`${API_BASE_URL}/api/v1/analysis/advanced/methods`);
   if (!response.ok) throw new Error('Failed to fetch methods');
   return response.json();
+}
+
+// ─────────── Calibration & Stats Types ───────────
+
+export interface CalibrationStatus {
+  total_predictions: number;
+  resolved: number;
+  pending: number;
+  directional_accuracy: number;
+  brier_score: number;
+  calibration_rating: string;  // "优秀" | "良好" | "一般" | "需改进" | "数据不足"
+}
+
+export interface CalibrationCurvePoint {
+  bin_low: number;
+  bin_high: number;
+  avg_predicted: number;
+  avg_actual: number;
+  count: number;
+}
+
+export interface BacktestRun {
+  id: string;
+  run_at: string;
+  event_count: number;
+  resolved_count: number;
+  brier_score: number;
+  directional_accuracy: number;
+  duration_ms: number;
+}
+
+// ─────────── Calibration API Methods ───────────
+
+export async function fetchCalibrationStatus(): Promise<CalibrationStatus> {
+  const token = localStorage.getItem('access_token');
+  const headers: Record<string, string> = {};
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+
+  const resp = await fetch(`${API_BASE_URL}/api/v1/calibration/status`, { headers });
+  if (!resp.ok) throw new Error(`Calibration status failed: ${resp.status}`);
+  return resp.json();
+}
+
+export async function fetchCalibrationCurve(nBins: number = 10): Promise<{curve: CalibrationCurvePoint[], bins: number}> {
+  const token = localStorage.getItem('access_token');
+  const headers: Record<string, string> = {};
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+
+  const resp = await fetch(`${API_BASE_URL}/api/v1/calibration/curve?n_bins=${nBins}`, { headers });
+  if (!resp.ok) throw new Error(`Calibration curve failed: ${resp.status}`);
+  return resp.json();
 }
