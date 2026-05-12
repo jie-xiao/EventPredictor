@@ -93,3 +93,6 @@ logs/
 
 # Superpowers brainstorming sessions
 .superpowers/
+
+# TypeScript incremental build cache
+frontend/tsconfig.tsbuildinfo
