@@ -40,6 +40,7 @@ class User(Base):
     workspace_memberships = relationship("WorkspaceMember", back_populates="user", cascade="all, delete-orphan")
     comments = relationship("Comment", back_populates="user", cascade="all, delete-orphan")
     analysis_records = relationship("AnalysisHistory", back_populates="user")
+    notifications = relationship("Notification", back_populates="user", cascade="all, delete-orphan")
 
 
 class UserSession(Base):
@@ -196,3 +197,87 @@ class Comment(Base):
     user = relationship("User", back_populates="comments")
     workspace = relationship("Workspace", back_populates="comments")
     replies = relationship("Comment", backref="parent", remote_side=[id], cascade="all")
+
+
+# ─────────────── 通知 ───────────────
+class Notification(Base):
+    __tablename__ = "notifications"
+
+    id = Column(String, primary_key=True, default=_generate_id)
+    user_id = Column(String, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    notification_type = Column(String(50), nullable=False, index=True)  # alert, new_event, system
+    title = Column(String(500), nullable=False, default="")
+    message = Column(Text, nullable=False, default="")
+    data = Column(Text, nullable=False, default="{}")  # JSON
+    is_read = Column(Boolean, nullable=False, default=False, index=True)
+    created_at = Column(String, nullable=False, default=_now, index=True)
+    read_at = Column(String, nullable=True)
+
+    user = relationship("User", back_populates="notifications")
+
+
+# ─────────────── 特征向量 ───────────────
+class EventFeature(Base):
+    __tablename__ = "event_features"
+
+    event_id = Column(String, primary_key=True)
+    timestamp = Column(String, nullable=False, index=True)
+    sources = Column(Text, nullable=False, default="[]")            # JSON array
+    event_type = Column(String(50), nullable=True)                  # CAMEO or custom
+    entities = Column(Text, nullable=False, default="[]")           # JSON [{name, role, country, type}]
+    sentiment = Column(Float, nullable=True)                        # -1.0 to 1.0
+    severity = Column(Float, nullable=True)                         # 0-1
+    urgency = Column(Float, nullable=True)                          # 0-1
+    goldstein_score = Column(Float, nullable=True)                  # -10 to 10
+    casualty_count = Column(Integer, nullable=True)
+    market_prob = Column(Float, nullable=True)
+    market_volume = Column(Float, nullable=True)
+    parent_event = Column(String, nullable=True)
+    related_events = Column(Text, nullable=False, default="[]")     # JSON array
+    geo_scope = Column(String(20), nullable=True)                   # global/regional/national/local
+    signal_velocity = Column(Float, nullable=True)
+    novelty_score = Column(Float, nullable=True)
+    raw_json = Column(Text, nullable=False, default="{}")           # Full feature dump
+    created_at = Column(String, nullable=False, default=_now)
+
+
+# ─────────────── 预测记录（反馈闭环核心） ───────────────
+class PredictionRecord(Base):
+    __tablename__ = "prediction_records"
+
+    prediction_id = Column(String, primary_key=True, default=_generate_id)
+    event_id = Column(String, nullable=False, index=True)
+    event_title = Column(String(500), nullable=False)
+    predicted_trend = Column(String(20), nullable=False)            # UP/DOWN/SIDEWAYS/UNCERTAIN
+    confidence = Column(Float, nullable=False)
+    probability_dist = Column(Text, nullable=True)                  # JSON {UP:0.6, DOWN:0.2, ...}
+    time_horizon = Column(String(50), nullable=True)
+    predicted_at = Column(String, nullable=False, default=_now, index=True)
+    predicted_expires = Column(String, nullable=True)               # When this prediction should be resolved
+
+    # Outcome
+    outcome_status = Column(String(20), nullable=False, default="pending")  # pending/correct/incorrect/partial
+    actual_outcome = Column(String(500), nullable=True)
+    resolved_at = Column(String, nullable=True)
+    resolution_source = Column(String(50), nullable=True)           # polymarket/news_match/manual
+
+    # Calibration
+    calibrated_confidence = Column(Float, nullable=True)
+    brier_score = Column(Float, nullable=True)
+
+
+# ─────────────── 回测运行记录 ───────────────
+class BacktestRun(Base):
+    __tablename__ = "backtest_runs"
+
+    id = Column(String, primary_key=True, default=_generate_id)
+    run_at = Column(String, nullable=False, default=_now, index=True)
+    event_count = Column(Integer, nullable=False, default=0)
+    resolved_count = Column(Integer, nullable=False, default=0)
+    brier_score = Column(Float, nullable=True)
+    auc = Column(Float, nullable=True)
+    directional_accuracy = Column(Float, nullable=True)
+    sharpe_ratio = Column(Float, nullable=True)
+    calibration_curve = Column(Text, nullable=True)                 # JSON [{predicted, actual}]
+    config_snapshot = Column(Text, nullable=True)                   # JSON of config at run time
+    duration_ms = Column(Integer, nullable=False, default=0)
